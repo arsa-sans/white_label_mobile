@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/providers/auth_provider.dart';
-import '../../features/auth/screens/login_screen.dart';
-import '../../features/auth/screens/register_screen.dart';
-import '../../features/auth/screens/tenant_select_screen.dart';
+import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../features/auth/presentation/views/login_view.dart';
+import '../../features/auth/presentation/views/register_view.dart';
+import '../../features/auth/presentation/views/tenant_select_view.dart';
 import '../../features/visitor/screens/catalog_screen.dart';
 import '../../features/visitor/screens/event_detail_screen.dart';
 import '../../features/visitor/screens/checkout_screen.dart';
@@ -39,18 +39,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // ── Auth Views (MVVM) ──────────────────────────────────────────────────
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const LoginView(),
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        builder: (context, state) => const RegisterView(),
       ),
       GoRoute(
         path: '/tenant-select',
-        builder: (context, state) => const TenantSelectScreen(),
+        builder: (context, state) => const TenantSelectView(),
       ),
+
+      // ── Visitor Screens ────────────────────────────────────────────────────
       GoRoute(
         path: '/catalog',
         builder: (context, state) => const CatalogScreen(),
@@ -78,6 +81,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/wallet',
         builder: (context, state) => const WalletScreen(),
       ),
+
+      // ── Staff / Role Screens ───────────────────────────────────────────────
       GoRoute(
         path: '/gate-scanner',
         builder: (context, state) => const GateScannerScreen(),

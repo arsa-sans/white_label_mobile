@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/auth_provider.dart';
-import '../../../core/theme/app_theme.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../../../../core/theme/app_theme.dart';
 
-class TenantSelectScreen extends ConsumerStatefulWidget {
-  const TenantSelectScreen({super.key});
+class TenantSelectView extends ConsumerStatefulWidget {
+  const TenantSelectView({super.key});
 
   @override
-  ConsumerState<TenantSelectScreen> createState() => _TenantSelectScreenState();
+  ConsumerState<TenantSelectView> createState() => _TenantSelectViewState();
 }
 
-class _TenantSelectScreenState extends ConsumerState<TenantSelectScreen> {
+class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
   late TextEditingController _tenantController;
 
   @override
@@ -51,7 +51,7 @@ class _TenantSelectScreenState extends ConsumerState<TenantSelectScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Aplikasi mobile dikonfigurasi untuk terhubung ke tenant spesifik via header X-Tenant-Id (SKILLS.md § 8).',
+              'Aplikasi mobile dikonfigurasi untuk terhubung ke tenant spesifik via header X-Tenant-Id.',
               style: TextStyle(fontSize: 12, color: AppTheme.slate400),
             ),
             const SizedBox(height: 24),

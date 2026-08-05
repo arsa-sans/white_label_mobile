@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/auth_provider.dart';
-import '../../../core/theme/app_theme.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../../../../core/theme/app_theme.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class LoginView extends ConsumerStatefulWidget {
+  const LoginView({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginViewState extends ConsumerState<LoginView> {
   final _emailController = TextEditingController(text: 'visitor@soundwave.com');
   final _passwordController = TextEditingController(text: 'Password123!');
   bool _obscurePassword = true;

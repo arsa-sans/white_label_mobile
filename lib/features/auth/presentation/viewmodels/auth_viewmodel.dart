@@ -1,45 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/storage/secure_storage.dart';
 import 'package:dio/dio.dart';
-
-// ─── User Model ───────────────────────────────────────────────────────────────
-
-class UserModel {
-  final String id;
-  final String name;
-  final String email;
-  final String role;
-  final String tenantId;
-
-  const UserModel({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.role,
-    required this.tenantId,
-  });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      role: json['role'] ?? 'visitor',
-      tenantId: json['tenant_id'] ?? 'tenant-001',
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'role': role,
-        'tenant_id': tenantId,
-      };
-}
+import '../../data/models/user_model.dart';
+import '../../data/repositories/auth_repository.dart';
 
 // ─── Auth State ───────────────────────────────────────────────────────────────
 
@@ -76,15 +39,14 @@ class AuthState {
   }
 }
 
-// ─── Auth Notifier (Riverpod 3 — Notifier) ────────────────────────────────────
+// ─── Auth ViewModel (Riverpod Notifier) ───────────────────────────────────────
 
-class AuthNotifier extends Notifier<AuthState> {
-  final ApiClient _apiClient = ApiClient();
-  final SecureStorageService _storage = SecureStorageService();
+class AuthViewModel extends Notifier<AuthState> {
+  late final AuthRepository _repository;
 
   @override
   AuthState build() {
-    // Kick off async initialisation without blocking.
+    _repository = AuthRepository();
     Future.microtask(checkInitialAuth);
     return const AuthState(isLoading: true);
   }
@@ -92,9 +54,9 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> checkInitialAuth() async {
     state = state.copyWith(isLoading: true);
     try {
-      final token = await _storage.getToken();
-      final tenantId = await _storage.getTenantId();
-      final savedUserJson = await _storage.getUserData();
+      final token = await _repository.getToken();
+      final tenantId = await _repository.getTenantId();
+      final savedUserJson = await _repository.getUserData();
 
       if (token != null && savedUserJson != null) {
         final userMap = jsonDecode(savedUserJson) as Map<String, dynamic>;
@@ -119,21 +81,15 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final response = await _apiClient.dio.post(
-        ApiEndpoints.login,
-        data: {'email': email, 'password': password},
-      );
+      final resData = await _repository.login(email, password);
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'] as Map<String, dynamic>;
+      if (resData['success'] == true) {
+        final data = resData['data'] as Map<String, dynamic>;
         final token = data['token'] as String;
         final userMap = data['user'] as Map<String, dynamic>;
         final user = UserModel.fromJson(userMap);
 
-        await _storage.saveToken(token);
-        await _storage.saveRole(user.role);
-        await _storage.saveTenantId(user.tenantId);
-        await _storage.saveUserData(jsonEncode(user.toJson()));
+        await _repository.saveSession(token, user);
 
         state = state.copyWith(
           isLoading: false,
@@ -145,7 +101,7 @@ class AuthNotifier extends Notifier<AuthState> {
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: response.data['error']?.toString() ?? 'Login gagal',
+          error: resData['error']?.toString() ?? 'Login gagal',
         );
         return false;
       }
@@ -166,25 +122,15 @@ class AuthNotifier extends Notifier<AuthState> {
       String name, String email, String password, String role) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final response = await _apiClient.dio.post(
-        ApiEndpoints.register,
-        data: {
-          'name': name,
-          'email': email,
-          'password': password,
-          'role': role,
-        },
-      );
+      final resData = await _repository.register(name, email, password, role);
 
-      if (response.data['success'] == true) {
-        final data = response.data['data'] as Map<String, dynamic>;
+      if (resData['success'] == true) {
+        final data = resData['data'] as Map<String, dynamic>;
         final token = data['token'] as String;
         final userMap = data['user'] as Map<String, dynamic>;
         final user = UserModel.fromJson(userMap);
 
-        await _storage.saveToken(token);
-        await _storage.saveRole(user.role);
-        await _storage.saveUserData(jsonEncode(user.toJson()));
+        await _repository.saveSession(token, user);
 
         state = state.copyWith(
           isLoading: false,
@@ -195,7 +141,7 @@ class AuthNotifier extends Notifier<AuthState> {
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: response.data['error']?.toString() ?? 'Registrasi gagal',
+          error: resData['error']?.toString() ?? 'Registrasi gagal',
         );
         return false;
       }
@@ -213,16 +159,16 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> updateTenant(String newTenantId) async {
-    await _storage.saveTenantId(newTenantId);
+    await _repository.saveTenantId(newTenantId);
     state = state.copyWith(tenantId: newTenantId);
   }
 
   Future<void> logout() async {
-    await _storage.clearAll();
+    await _repository.clearSession();
     state = const AuthState();
   }
 }
 
-// ─── Provider ────────────────────────────────────────────────────────────────
+// ─── Provider Alias ───────────────────────────────────────────────────────────
 
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthViewModel, AuthState>(AuthViewModel.new);
