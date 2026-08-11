@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/theme/app_theme.dart';
+import 'package:wl_mobile/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
-class CatalogScreen extends ConsumerStatefulWidget {
-  const CatalogScreen({super.key});
+class CatalogView extends ConsumerStatefulWidget {
+  const CatalogView({super.key});
 
   @override
-  ConsumerState<CatalogScreen> createState() => _CatalogScreenState();
+  ConsumerState<CatalogView> createState() => _CatalogViewState();
 }
 
-class _CatalogScreenState extends ConsumerState<CatalogScreen> {
+class _CatalogViewState extends ConsumerState<CatalogView> {
   final ApiClient _apiClient = ApiClient();
   List<dynamic> _events = [];
   bool _isLoading = true;

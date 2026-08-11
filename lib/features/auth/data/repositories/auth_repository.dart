@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
-import '../../../../core/api/api_client.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../models/user_model.dart';

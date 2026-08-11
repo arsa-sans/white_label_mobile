@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/theme/app_theme.dart';
+import 'package:wl_mobile/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
-class OrganizerSummaryScreen extends ConsumerStatefulWidget {
-  const OrganizerSummaryScreen({super.key});
+class OrganizerSummaryView extends ConsumerStatefulWidget {
+  const OrganizerSummaryView({super.key});
 
   @override
-  ConsumerState<OrganizerSummaryScreen> createState() => _OrganizerSummaryScreenState();
+  ConsumerState<OrganizerSummaryView> createState() => _OrganizerSummaryViewState();
 }
 
-class _OrganizerSummaryScreenState extends ConsumerState<OrganizerSummaryScreen> {
+class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
   final ApiClient _apiClient = ApiClient();
   dynamic _metrics;
   bool _isLoading = true;
@@ -155,61 +155,6 @@ class _OrganizerSummaryScreenState extends ConsumerState<OrganizerSummaryScreen>
                           percent: (_metrics['checkin_rate_percent'] ?? 0).toDouble(),
                           color: AppTheme.accentColor,
                         ),
-
-                        const SizedBox(height: 24),
-
-                        // Recent Orders
-                        const Text(
-                          'TRANSAKSI TERAKHIR',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppTheme.slate500, letterSpacing: 1),
-                        ),
-                        const SizedBox(height: 12),
-
-                        if (_metrics['recent_orders'] == null || (_metrics['recent_orders'] as List).isEmpty)
-                          const Center(child: Text('Belum ada transaksi.', style: TextStyle(color: AppTheme.slate500, fontSize: 12)))
-                        else
-                          ...(_metrics['recent_orders'] as List).take(5).map((order) {
-                            final status = order['status'] as String;
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: AppTheme.cardDark,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppTheme.cardBorder),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(order['id'] ?? '', style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: AppTheme.slate400)),
-                                        const SizedBox(height: 4),
-                                        Text('Rp ${_formatRupiah(order['amount'] ?? 0)}',
-                                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white)),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: (status == 'paid' ? AppTheme.accentColor : status == 'pending' ? AppTheme.warningColor : AppTheme.dangerColor).withOpacity(0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      status.toUpperCase(),
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w900,
-                                        color: status == 'paid' ? AppTheme.accentColor : status == 'pending' ? AppTheme.warningColor : AppTheme.dangerColor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
                       ],
                     ),
                   ),

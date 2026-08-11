@@ -7,12 +7,12 @@ import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/tenant_select_view.dart';
 import '../../features/gate/presentation/views/gate_scanner_view.dart';
 import '../../features/booth/presentation/views/booth_cashier_view.dart';
-import '../../features/visitor/screens/catalog_screen.dart';
-import '../../features/visitor/screens/event_detail_screen.dart';
-import '../../features/visitor/screens/checkout_screen.dart';
-import '../../features/visitor/screens/my_tickets_screen.dart';
-import '../../features/visitor/screens/wallet_screen.dart';
-import '../../features/organizer/screens/organizer_summary_screen.dart';
+import '../../features/visitor/presentation/views/catalog_view.dart';
+import '../../features/visitor/presentation/views/event_detail_view.dart';
+import '../../features/visitor/presentation/views/checkout_view.dart';
+import '../../features/visitor/presentation/views/my_tickets_view.dart';
+import '../../features/visitor/presentation/views/wallet_view.dart';
+import '../../features/organizer/presentation/views/organizer_summary_view.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -53,16 +53,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TenantSelectView(),
       ),
 
-      // ── Visitor Screens ────────────────────────────────────────────────────
+      // ── Visitor Views (MVVM) ───────────────────────────────────────────────
       GoRoute(
         path: '/catalog',
-        builder: (context, state) => const CatalogScreen(),
+        builder: (context, state) => const CatalogView(),
       ),
       GoRoute(
         path: '/event-detail/:id',
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
-          return EventDetailScreen(eventId: id);
+          return EventDetailView(eventId: id);
         },
       ),
       GoRoute(
@@ -70,19 +70,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           final seatId = state.uri.queryParameters['seatId'] ?? '';
-          return CheckoutScreen(eventId: id, seatId: seatId);
+          return CheckoutView(eventId: id, seatId: seatId);
         },
       ),
       GoRoute(
         path: '/my-tickets',
-        builder: (context, state) => const MyTicketsScreen(),
+        builder: (context, state) => const MyTicketsView(),
       ),
       GoRoute(
         path: '/wallet',
-        builder: (context, state) => const WalletScreen(),
+        builder: (context, state) => const WalletView(),
       ),
 
-      // ── Staff / Role Views (MVVM) ──────────────────────────────────────────
+      // ── Staff & Organizer Views (MVVM) ────────────────────────────────────
       GoRoute(
         path: '/gate-scanner',
         builder: (context, state) => const GateScannerView(),
@@ -93,7 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/organizer-summary',
-        builder: (context, state) => const OrganizerSummaryScreen(),
+        builder: (context, state) => const OrganizerSummaryView(),
       ),
     ],
   );
