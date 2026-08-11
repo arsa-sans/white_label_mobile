@@ -12,8 +12,8 @@ class LoginView extends ConsumerStatefulWidget {
 }
 
 class _LoginViewState extends ConsumerState<LoginView> {
-  final _emailController = TextEditingController(text: 'visitor@soundwave.com');
-  final _passwordController = TextEditingController(text: 'Password123!');
+  final _emailController = TextEditingController(text: 'gate@soundwave.com');
+  final _passwordController = TextEditingController(text: 'GateStaff@2026!');
   bool _obscurePassword = true;
 
   void _handleLogin() async {
@@ -30,9 +30,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
     }
   }
 
-  void _quickFill(String email, String role) {
+  void _quickFill(String email, String password) {
     _emailController.text = email;
-    _passwordController.text = 'Password123!';
+    _passwordController.text = password;
   }
 
   @override
@@ -55,7 +55,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     color: AppTheme.primaryColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.confirmation_number_outlined, size: 48, color: AppTheme.primaryColor),
+                  child: const Icon(Icons.qr_code_scanner_rounded, size: 48, color: AppTheme.primaryColor),
                 ),
               ),
               const SizedBox(height: 16),
@@ -70,11 +70,34 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 ),
               ),
               const Text(
-                'Ticketing & Venue Cashless Mobile',
+                'Gate Access Staff & Mobile Control',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: AppTheme.slate400),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+
+              // Access Scope Banner
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 20, color: AppTheme.primaryColor),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Aplikasi Mobile ini khusus untuk Gate Staff dan Organizer Event.',
+                        style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
 
               // Tenant Badge Button
               InkWell(
@@ -105,7 +128,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Email Input
               TextField(
@@ -142,14 +165,14 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('MASUK KE AKUN'),
+                    : const Text('MASUK KE AKUN STAFF'),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              // Quick Preset Accounts for Easy Demo Testing
+              // Quick Preset Accounts for Demo
               const Text(
-                'Demo Accounts Quick Select:',
+                'Akses Demo Cepat:',
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate400),
               ),
               const SizedBox(height: 8),
@@ -158,38 +181,22 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 runSpacing: 8,
                 children: [
                   ActionChip(
-                    label: const Text('Visitor', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('visitor@soundwave.com', 'visitor'),
-                  ),
-                  ActionChip(
                     label: const Text('Gate Staff', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('gate@soundwave.com', 'gate_staff'),
-                  ),
-                  ActionChip(
-                    label: const Text('Vendor Booth', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('vendor1@kopi.com', 'vendor'),
+                    onPressed: () => _quickFill('gate@soundwave.com', 'GateStaff@2026!'),
                   ),
                   ActionChip(
                     label: const Text('Organizer', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('organizer@soundwave.com', 'organizer'),
+                    onPressed: () => _quickFill('organizer@soundwave.com', 'Organizer@2026!'),
                   ),
                 ],
               ),
 
               const SizedBox(height: 24),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Belum punya akun? ', style: TextStyle(fontSize: 13, color: AppTheme.slate400)),
-                  GestureDetector(
-                    onTap: () => context.push('/register'),
-                    child: const Text(
-                      'Daftar Sekarang',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Gate Staff didaftarkan oleh Organizer melalui Web Dashboard. Visitor & Organizer pendaftaran dapat diakses melalui Portal Web.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 11, color: AppTheme.slate400, height: 1.4),
               ),
             ],
           ),
@@ -198,3 +205,4 @@ class _LoginViewState extends ConsumerState<LoginView> {
     );
   }
 }
+
