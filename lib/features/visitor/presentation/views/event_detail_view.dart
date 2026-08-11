@@ -103,7 +103,7 @@ class _EventDetailViewState extends ConsumerState<EventDetailView> {
                               height: 180,
                               width: double.infinity,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                              errorBuilder: (_, _, _) => Container(
                                 height: 180,
                                 color: AppTheme.cardBorder,
                                 child: const Icon(Icons.event, size: 64, color: AppTheme.slate500),

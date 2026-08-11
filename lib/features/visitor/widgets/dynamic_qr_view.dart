@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../../core/api/api_client.dart';
-import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class DynamicQrView extends StatefulWidget {
@@ -98,7 +98,7 @@ class _DynamicQrViewState extends State<DynamicQrView> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -146,9 +146,9 @@ class _DynamicQrViewState extends State<DynamicQrView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.accentColor.withOpacity(0.1),
+              color: AppTheme.accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.accentColor.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.accentColor.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

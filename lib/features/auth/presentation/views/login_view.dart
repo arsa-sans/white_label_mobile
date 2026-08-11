@@ -52,7 +52,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.15),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.confirmation_number_outlined, size: 48, color: AppTheme.primaryColor),

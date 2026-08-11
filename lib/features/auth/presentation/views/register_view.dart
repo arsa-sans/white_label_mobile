@@ -91,7 +91,7 @@ class _RegisterViewState extends ConsumerState<RegisterView> {
 
               // Role Selector
               DropdownButtonFormField<String>(
-                value: _selectedRole,
+                initialValue: _selectedRole,
                 decoration: const InputDecoration(
                   labelText: 'Role Akun',
                   prefixIcon: Icon(Icons.badge_outlined, size: 20),

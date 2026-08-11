@@ -177,9 +177,9 @@ class _GateScannerViewState extends State<GateScannerView> with TickerProviderSt
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.2),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.4)),
+                          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.4)),
                         ),
                         child: const Icon(Icons.qr_code_scanner, color: AppTheme.primaryColor, size: 22),
                       ),
@@ -232,7 +232,7 @@ class _GateScannerViewState extends State<GateScannerView> with TickerProviderSt
                         decoration: BoxDecoration(
                           color: const Color(0xFF020617),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5), width: 2),
+                          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.5), width: 2),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -307,7 +307,7 @@ class _GateScannerViewState extends State<GateScannerView> with TickerProviderSt
                                 color: AppTheme.cardDark,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isValid ? AppTheme.accentColor.withOpacity(0.3) : AppTheme.dangerColor.withOpacity(0.3),
+                                  color: isValid ? AppTheme.accentColor.withValues(alpha: 0.3) : AppTheme.dangerColor.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Row(
@@ -337,8 +337,8 @@ class _GateScannerViewState extends State<GateScannerView> with TickerProviderSt
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               color: _flashSuccess
-                  ? AppTheme.accentColor.withOpacity(0.92)
-                  : AppTheme.dangerColor.withOpacity(0.92),
+                  ? AppTheme.accentColor.withValues(alpha: 0.92)
+                  : AppTheme.dangerColor.withValues(alpha: 0.92),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

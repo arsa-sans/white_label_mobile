@@ -175,9 +175,9 @@ class _CheckoutViewState extends ConsumerState<CheckoutView> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.warningColor.withOpacity(0.15),
+                          color: AppTheme.warningColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.warningColor.withOpacity(0.3)),
+                          border: Border.all(color: AppTheme.warningColor.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -69,9 +69,9 @@ class _SeatMapGridState extends State<SeatMapGrid> {
       case SeatStatus.available:
         return AppTheme.cardBorder;
       case SeatStatus.taken:
-        return AppTheme.dangerColor.withOpacity(0.4);
+        return AppTheme.dangerColor.withValues(alpha: 0.4);
       case SeatStatus.locked:
-        return AppTheme.warningColor.withOpacity(0.4);
+        return AppTheme.warningColor.withValues(alpha: 0.4);
       case SeatStatus.selected:
         return AppTheme.primaryColor;
     }
@@ -83,9 +83,9 @@ class _SeatMapGridState extends State<SeatMapGrid> {
       case SeatStatus.available:
         return AppTheme.slate300;
       case SeatStatus.taken:
-        return AppTheme.dangerColor.withOpacity(0.5);
+        return AppTheme.dangerColor.withValues(alpha: 0.5);
       case SeatStatus.locked:
-        return AppTheme.warningColor.withOpacity(0.6);
+        return AppTheme.warningColor.withValues(alpha: 0.6);
       case SeatStatus.selected:
         return Colors.white;
     }
@@ -136,12 +136,12 @@ class _SeatMapGridState extends State<SeatMapGrid> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primaryColor.withOpacity(0.3),
-                AppTheme.secondaryColor.withOpacity(0.3),
+                AppTheme.primaryColor.withValues(alpha: 0.3),
+                AppTheme.secondaryColor.withValues(alpha: 0.3),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.primaryColor.withOpacity(0.4)),
+            border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.4)),
           ),
           child: const Center(
             child: Text(
@@ -185,7 +185,7 @@ class _SeatMapGridState extends State<SeatMapGrid> {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: AppTheme.primaryColor.withOpacity(0.4),
+                                color: AppTheme.primaryColor.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                               )
@@ -232,9 +232,9 @@ class _SeatMapGridState extends State<SeatMapGrid> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.12),
+              color: AppTheme.primaryColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.4)),
+              border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.4)),
             ),
             child: Row(
               children: [

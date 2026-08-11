@@ -105,7 +105,7 @@ class _CatalogViewState extends ConsumerState<CatalogView> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final cat = _categories[index];
                         final isSelected = cat == _selectedCategory;
@@ -173,7 +173,7 @@ class _CatalogViewState extends ConsumerState<CatalogView> {
                     height: 140,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       height: 140,
                       color: AppTheme.cardBorder,
                       child: const Icon(Icons.event, size: 48, color: AppTheme.slate500),
@@ -185,7 +185,7 @@ class _CatalogViewState extends ConsumerState<CatalogView> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

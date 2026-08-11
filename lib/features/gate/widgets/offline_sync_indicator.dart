@@ -12,13 +12,13 @@ class OfflineSyncIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: isOnline
-            ? AppTheme.accentColor.withOpacity(0.15)
-            : AppTheme.warningColor.withOpacity(0.15),
+            ? AppTheme.accentColor.withValues(alpha: 0.15)
+            : AppTheme.warningColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isOnline
-              ? AppTheme.accentColor.withOpacity(0.5)
-              : AppTheme.warningColor.withOpacity(0.5),
+              ? AppTheme.accentColor.withValues(alpha: 0.5)
+              : AppTheme.warningColor.withValues(alpha: 0.5),
         ),
       ),
       child: Row(

@@ -133,7 +133,7 @@ class _BoothCashierViewState extends State<BoothCashierView> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.2),
+                color: AppTheme.primaryColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.storefront, size: 18, color: AppTheme.primaryColor),
@@ -261,9 +261,9 @@ class _BoothCashierViewState extends State<BoothCashierView> {
                                 onPressed: () => _handleNumpad(btn),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: btn == 'C'
-                                      ? const Color(0xFF451A03).withOpacity(0.8)
+                                      ? const Color(0xFF451A03).withValues(alpha: 0.8)
                                       : btn == 'DEL'
-                                          ? const Color(0xFF450A0A).withOpacity(0.8)
+                                          ? const Color(0xFF450A0A).withValues(alpha: 0.8)
                                           : const Color(0xFF1E293B),
                                   foregroundColor: btn == 'C'
                                       ? AppTheme.warningColor
@@ -384,7 +384,7 @@ class _BoothCashierViewState extends State<BoothCashierView> {
           // Result Modal Overlay
           if (_showResult)
             Container(
-              color: Colors.black.withOpacity(0.85),
+              color: Colors.black.withValues(alpha: 0.85),
               child: Center(
                 child: Container(
                   margin: const EdgeInsets.all(32),
@@ -393,7 +393,7 @@ class _BoothCashierViewState extends State<BoothCashierView> {
                     color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: _resultSuccess ? AppTheme.accentColor.withOpacity(0.5) : AppTheme.dangerColor.withOpacity(0.5),
+                      color: _resultSuccess ? AppTheme.accentColor.withValues(alpha: 0.5) : AppTheme.dangerColor.withValues(alpha: 0.5),
                       width: 2,
                     ),
                   ),
@@ -404,7 +404,7 @@ class _BoothCashierViewState extends State<BoothCashierView> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: (_resultSuccess ? AppTheme.accentColor : AppTheme.dangerColor).withOpacity(0.15),
+                          color: (_resultSuccess ? AppTheme.accentColor : AppTheme.dangerColor).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
