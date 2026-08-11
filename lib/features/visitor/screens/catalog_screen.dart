@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../auth/providers/auth_provider.dart';
+import '../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class CatalogScreen extends ConsumerStatefulWidget {
   const CatalogScreen({super.key});

@@ -5,13 +5,13 @@ import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/tenant_select_view.dart';
+import '../../features/gate/presentation/views/gate_scanner_view.dart';
+import '../../features/booth/presentation/views/booth_cashier_view.dart';
 import '../../features/visitor/screens/catalog_screen.dart';
 import '../../features/visitor/screens/event_detail_screen.dart';
 import '../../features/visitor/screens/checkout_screen.dart';
 import '../../features/visitor/screens/my_tickets_screen.dart';
 import '../../features/visitor/screens/wallet_screen.dart';
-import '../../features/gate/screens/gate_scanner_screen.dart';
-import '../../features/booth/screens/booth_cashier_screen.dart';
 import '../../features/organizer/screens/organizer_summary_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -82,14 +82,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WalletScreen(),
       ),
 
-      // ── Staff / Role Screens ───────────────────────────────────────────────
+      // ── Staff / Role Views (MVVM) ──────────────────────────────────────────
       GoRoute(
         path: '/gate-scanner',
-        builder: (context, state) => const GateScannerScreen(),
+        builder: (context, state) => const GateScannerView(),
       ),
       GoRoute(
         path: '/booth-cashier',
-        builder: (context, state) => const BoothCashierScreen(),
+        builder: (context, state) => const BoothCashierView(),
       ),
       GoRoute(
         path: '/organizer-summary',
