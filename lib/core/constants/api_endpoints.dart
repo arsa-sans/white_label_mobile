@@ -1,8 +1,8 @@
 /// Konstanta URL Endpoint Backend WhiteLabel API
 class ApiEndpoints {
-  // Base Backend URL — change to your server IP when testing on device
-  // Android emulator: use '10.0.2.2'; iOS simulator: 'localhost'
-  static const String baseUrl = 'http://10.0.2.2:4000/api/v1';
+  // Base Backend URL — Configured for WiFi local testing on physical device
+  // Laptop IPv4: 192.168.115.153
+  static const String baseUrl = 'http://192.168.115.153:4000/api/v1';
   static const String devLocalhostUrl = 'http://localhost:4000/api/v1';
 
   // Auth
