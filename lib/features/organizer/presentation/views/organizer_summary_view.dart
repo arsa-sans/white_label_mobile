@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:wl_mobile/features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../viewmodels/organizer_viewmodel.dart';
 
 class OrganizerSummaryView extends ConsumerStatefulWidget {
   const OrganizerSummaryView({super.key});
@@ -14,36 +13,20 @@ class OrganizerSummaryView extends ConsumerStatefulWidget {
 }
 
 class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
-  final ApiClient _apiClient = ApiClient();
-  dynamic _metrics;
-  bool _isLoading = true;
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _fetchMetrics();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _fetchMetrics());
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      ref.read(organizerProvider.notifier).fetchMetrics();
+    });
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _fetchMetrics() async {
-    try {
-      final res = await _apiClient.dio.get(ApiEndpoints.analyticsDashboard);
-      if (res.data['success'] == true && mounted) {
-        setState(() {
-          _metrics = res.data['data'];
-          _isLoading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   String _formatRupiah(num amount) {
@@ -55,6 +38,8 @@ class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
+    final orgState = ref.watch(organizerProvider);
+    final metrics = orgState.metrics;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +54,7 @@ class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
             tooltip: 'Refresh Data',
-            onPressed: _fetchMetrics,
+            onPressed: () => ref.read(organizerProvider.notifier).fetchMetrics(),
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppTheme.dangerColor, size: 20),
@@ -77,12 +62,12 @@ class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
           ),
         ],
       ),
-      body: _isLoading
+      body: orgState.isLoading && metrics == null
           ? const Center(child: CircularProgressIndicator())
-          : _metrics == null
+          : metrics == null
               ? const Center(child: Text('Gagal memuat metrik.', style: TextStyle(color: AppTheme.slate400)))
               : RefreshIndicator(
-                  onRefresh: _fetchMetrics,
+                  onRefresh: () => ref.read(organizerProvider.notifier).fetchMetrics(),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(20),
@@ -107,28 +92,28 @@ class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
                             _KpiCard(
                               icon: Icons.payments_outlined,
                               label: 'Total Revenue',
-                              value: _formatRupiah(_metrics['total_revenue'] ?? 0),
-                              sub: '${_metrics['total_tickets_sold'] ?? 0} tiket terjual',
+                              value: _formatRupiah(metrics['total_revenue'] ?? 0),
+                              sub: '${metrics['total_tickets_sold'] ?? 0} tiket terjual',
                               gradient: const [Color(0xFF4F46E5), Color(0xFF7C3AED)],
                             ),
                             _KpiCard(
                               icon: Icons.confirmation_number_outlined,
                               label: 'Tiket Sold',
-                              value: '${_metrics['total_tickets_sold'] ?? 0}',
-                              sub: '${_metrics['total_events'] ?? 0} event aktif',
+                              value: '${metrics['total_tickets_sold'] ?? 0}',
+                              sub: '${metrics['total_events'] ?? 0} event aktif',
                               gradient: const [Color(0xFF0891B2), Color(0xFF06B6D4)],
                             ),
                             _KpiCard(
                               icon: Icons.qr_code_scanner,
                               label: 'Gate Check-In',
-                              value: '${_metrics['total_scanned'] ?? 0}',
-                              sub: '${_metrics['checkin_rate_percent'] ?? 0}% dari sold',
+                              value: '${metrics['total_scanned'] ?? 0}',
+                              sub: '${metrics['checkin_rate_percent'] ?? 0}% dari sold',
                               gradient: const [Color(0xFF059669), Color(0xFF10B981)],
                             ),
                             _KpiCard(
                               icon: Icons.chair_outlined,
                               label: 'Occupancy',
-                              value: '${_metrics['occupancy_rate_percent'] ?? 0}%',
+                              value: '${metrics['occupancy_rate_percent'] ?? 0}%',
                               sub: 'vs total kapasitas',
                               gradient: const [Color(0xFFB45309), Color(0xFFF59E0B)],
                             ),
@@ -146,13 +131,13 @@ class _OrganizerSummaryViewState extends ConsumerState<OrganizerSummaryView> {
 
                         _ProgressBar(
                           label: 'Seat Occupancy Rate',
-                          percent: (_metrics['occupancy_rate_percent'] ?? 0).toDouble(),
+                          percent: (metrics['occupancy_rate_percent'] ?? 0).toDouble(),
                           color: AppTheme.primaryColor,
                         ),
                         const SizedBox(height: 10),
                         _ProgressBar(
                           label: 'Gate Check-In Rate',
-                          percent: (_metrics['checkin_rate_percent'] ?? 0).toDouble(),
+                          percent: (metrics['checkin_rate_percent'] ?? 0).toDouble(),
                           color: AppTheme.accentColor,
                         ),
                       ],

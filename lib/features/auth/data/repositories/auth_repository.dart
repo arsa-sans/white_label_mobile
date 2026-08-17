@@ -1,6 +1,6 @@
 import 'dart:convert';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../models/user_model.dart';
 
