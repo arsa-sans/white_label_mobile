@@ -32,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // ── Auth Views (MVVM) ──────────────────────────────────────────────────
+      // Auth Views (MVVM)
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginView(),
@@ -42,7 +42,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TenantSelectView(),
       ),
 
-      // ── Staff & Organizer Views (MVVM) ────────────────────────────────────
+      // Staff & Organizer Views (MVVM)
       GoRoute(
         path: '/gate-scanner',
         builder: (context, state) => const GateScannerView(),

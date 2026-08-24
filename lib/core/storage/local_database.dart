@@ -4,12 +4,12 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-// ─── Part Directive (must appear after imports, before declarations) ──────────
+// Part Directive (must appear after imports, before declarations)
 // Run: dart run build_runner build
 // to generate the `local_database.g.dart` file.
 part 'local_database.g.dart';
 
-// ─── Table Definition ────────────────────────────────────────────────────────
+// Table Definition
 
 /// Represents one gate-scan event stored locally (offline-first).
 class GateScanLogs extends Table {
@@ -34,7 +34,7 @@ class GateScanLogs extends Table {
   TextColumn get eventId => text().nullable()();
 }
 
-// ─── Database Class ───────────────────────────────────────────────────────────
+// Database Class
 
 @DriftDatabase(tables: [GateScanLogs])
 class LocalDatabase extends _$LocalDatabase {
@@ -43,7 +43,7 @@ class LocalDatabase extends _$LocalDatabase {
   @override
   int get schemaVersion => 1;
 
-  // ─── Insert ────────────────────────────────────────────────────────────────
+  // Insert
 
   /// Persists a new scan log entry. Returns the generated row id.
   Future<int> insertScanLog({
@@ -63,7 +63,7 @@ class LocalDatabase extends _$LocalDatabase {
         ),
       );
 
-  // ─── Query ─────────────────────────────────────────────────────────────────
+  // Query
 
   /// Returns all pending (un-synced) logs, oldest-first, for batch upload.
   Future<List<GateScanLog>> getPendingLogs() =>
@@ -87,7 +87,7 @@ class LocalDatabase extends _$LocalDatabase {
     return result.read(count) ?? 0;
   }
 
-  // ─── Update ────────────────────────────────────────────────────────────────
+  // Update
 
   /// Marks a batch of log ids as synced after a successful upload.
   Future<void> markAsSynced(List<int> ids) async {
@@ -96,7 +96,7 @@ class LocalDatabase extends _$LocalDatabase {
     );
   }
 
-  // ─── Delete ────────────────────────────────────────────────────────────────
+  // Delete
 
   /// Removes all synced logs older than [days] days to keep DB small.
   Future<int> cleanOldSyncedLogs({int days = 7}) {
@@ -108,7 +108,7 @@ class LocalDatabase extends _$LocalDatabase {
   }
 }
 
-// ─── Connection Factory ───────────────────────────────────────────────────────
+// Connection Factory
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
