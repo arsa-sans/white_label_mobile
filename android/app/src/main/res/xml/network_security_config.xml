@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network Security Configuration for WhiteLabel Mobile App
+  Allows cleartext (HTTP) traffic to local development servers during debugging.
+  In production, only HTTPS traffic is allowed.
+-->
+<network-security-config>
+    <!-- Allow cleartext traffic to local/private network IPs for development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Localhost -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+
+        <!-- Common private network ranges (WiFi debugging) -->
+        <domain includeSubdomains="true">192.168.0.0</domain>
+        <domain includeSubdomains="true">192.168.1.0</domain>
+        <domain includeSubdomains="true">192.168.115.0</domain>
+        <domain includeSubdomains="true">10.0.0.0</domain>
+    </domain-config>
+
+    <!-- Base config: trust system CAs -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

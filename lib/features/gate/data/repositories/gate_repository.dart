@@ -10,7 +10,10 @@ class GateRepository {
   Future<Map<String, dynamic>> scanTicket(String qrToken) async {
     final response = await _apiClient.dio.post(
       ApiEndpoints.gateScan,
-      data: {'token': qrToken},
+      data: {
+        'qr_token': qrToken,
+        'gate_device_id': 'GATE-MOBILE-01',
+      },
     );
     return response.data as Map<String, dynamic>;
   }

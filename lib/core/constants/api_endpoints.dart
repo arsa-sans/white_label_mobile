@@ -1,7 +1,37 @@
 /// Konstanta URL Endpoint Backend WhiteLabel API
+///
+/// ════════════════════════════════════════════════════════════════════════════
+/// 🔧 KONFIGURASI WIRELESS DEBUG (WiFi Debugging dari HP ke Laptop)
+/// ════════════════════════════════════════════════════════════════════════════
+///
+/// 1. Pastikan HP dan Laptop terhubung ke WiFi yang SAMA.
+///
+/// 2. Cari IP WiFi laptop:
+///    - Windows:  Buka CMD → ketik `ipconfig` → cari "IPv4 Address" pada adapter WiFi
+///    - macOS:    System Preferences → Network → WiFi → IP Address
+///    - Linux:    `ip addr show wlan0` atau `hostname -I`
+///
+/// 3. Update [baseUrl] di bawah dengan IP yang ditemukan.
+///    Contoh: Jika laptop IPv4 = 192.168.1.100, maka:
+///    `static const String baseUrl = 'http://192.168.1.100:4000/api/v1';`
+///
+/// 4. Pastikan backend berjalan: `npm run dev` di folder wl_backend
+///
+/// 5. Jalankan app: `flutter run` — Flutter akan otomatis mendeteksi device
+///    yang terhubung via USB maupun wireless debugging.
+///
+/// 6. Untuk wireless debugging via ADB:
+///    a. Sambungkan HP via USB terlebih dahulu
+///    b. Jalankan: `adb tcpip 5555`
+///    c. Cabut USB, lalu: `adb connect <IP_HP>:5555`
+///    d. Verifikasi: `adb devices` — harus muncul device wireless
+///    e. Jalankan: `flutter run -d <device_id>`
+/// ════════════════════════════════════════════════════════════════════════════
 class ApiEndpoints {
-  // Base Backend URL — Configured for WiFi local testing on physical device
-  // Laptop IPv4: 192.168.115.153
+  // ┌──────────────────────────────────────────────────────────────────────────┐
+  // │  Base Backend URL — UPDATE IP INI sesuai IPv4 WiFi laptop kamu!        │
+  // │  Laptop IPv4 saat ini: 192.168.115.153                                  │
+  // └──────────────────────────────────────────────────────────────────────────┘
   static const String baseUrl = 'http://192.168.115.153:4000/api/v1';
   static const String devLocalhostUrl = 'http://localhost:4000/api/v1';
 

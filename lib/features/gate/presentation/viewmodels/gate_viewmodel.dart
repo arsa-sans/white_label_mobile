@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/gate_repository.dart';
 import '../../../../core/storage/local_database.dart';
+import '../../../../core/network/socket_service.dart';
 
 class GateState {
   final bool isOnline;
@@ -12,6 +13,8 @@ class GateState {
   final int sessionInvalid;
   final int pendingSyncCount;
   final List<Map<String, dynamic>> sessionLogs;
+  /// Real-time notification message from another device's scan
+  final String? remoteNotification;
 
   const GateState({
     this.isOnline = true,
@@ -23,6 +26,7 @@ class GateState {
     this.sessionInvalid = 0,
     this.pendingSyncCount = 0,
     this.sessionLogs = const [],
+    this.remoteNotification,
   });
 
   GateState copyWith({
@@ -35,6 +39,8 @@ class GateState {
     int? sessionInvalid,
     int? pendingSyncCount,
     List<Map<String, dynamic>>? sessionLogs,
+    String? remoteNotification,
+    bool clearNotification = false,
   }) {
     return GateState(
       isOnline: isOnline ?? this.isOnline,
@@ -46,6 +52,7 @@ class GateState {
       sessionInvalid: sessionInvalid ?? this.sessionInvalid,
       pendingSyncCount: pendingSyncCount ?? this.pendingSyncCount,
       sessionLogs: sessionLogs ?? this.sessionLogs,
+      remoteNotification: clearNotification ? null : (remoteNotification ?? this.remoteNotification),
     );
   }
 }
@@ -53,13 +60,49 @@ class GateState {
 class GateViewModel extends Notifier<GateState> {
   late final GateRepository _repository;
   late final LocalDatabase _db;
+  late final SocketService _socketService;
 
   @override
   GateState build() {
     _repository = GateRepository();
     _db = LocalDatabase();
+    _socketService = SocketService();
     refreshPendingCount();
+    _initSocketConnection();
     return const GateState();
+  }
+
+  /// Initialize Socket.IO connection and listen for remote scan events
+  void _initSocketConnection() {
+    _socketService.onGateScanResult = (data) {
+      final result = data['result']?.toString() ?? 'unknown';
+      final ticketId = data['ticket_id']?.toString() ?? '';
+      final staffEmail = data['staff_email']?.toString() ?? '';
+      final deviceId = data['gate_device_id']?.toString() ?? '';
+
+      // Only show notification if scan came from a DIFFERENT device
+      if (deviceId != 'GATE-MOBILE-01') {
+        final isValid = result == 'valid';
+        final msg = isValid
+            ? '✓ Tiket $ticketId validated by $staffEmail ($deviceId)'
+            : '✗ Scan $result: $ticketId ($deviceId)';
+
+        state = state.copyWith(remoteNotification: msg);
+      }
+    };
+
+    _socketService.onSyncCompleted = (data) {
+      final syncedCount = data['synced_count'] ?? 0;
+      state = state.copyWith(
+        remoteNotification: '🔄 $syncedCount log(s) synced by ${data['staff_email'] ?? 'staff'}',
+      );
+    };
+
+    _socketService.connect();
+  }
+
+  void clearNotification() {
+    state = state.copyWith(clearNotification: true);
   }
 
   void setOnline(bool online) {
@@ -81,7 +124,7 @@ class GateViewModel extends Notifier<GateState> {
     try {
       await _repository.syncOfflineLogs(
         pending
-            .map((l) => {
+            .map((l) => <String, dynamic>{
                   'token': l.token,
                   'result': l.result,
                   'scanned_at': l.scannedAt,

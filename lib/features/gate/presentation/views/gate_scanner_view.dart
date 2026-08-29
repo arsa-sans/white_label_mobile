@@ -36,6 +36,27 @@ class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerPr
       final isOnline = results.first != ConnectivityResult.none;
       ref.read(gateProvider.notifier).setOnline(isOnline);
     });
+
+    // Listen for remote scan notifications (from other devices via Socket.IO)
+    ref.listenManual(
+      gateProvider.select((s) => s.remoteNotification),
+      (previous, next) {
+        if (next != null && next.isNotEmpty && mounted) {
+          final isSuccess = next.startsWith('✓');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next, style: const TextStyle(fontWeight: FontWeight.w600)),
+              backgroundColor: isSuccess ? AppTheme.emerald600 : AppTheme.amber600,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.all(12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          ref.read(gateProvider.notifier).clearNotification();
+        }
+      },
+    );
   }
 
   @override

@@ -1,8 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for HTTP API calls to backend -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Required for WiFi connectivity detection (connectivity_plus) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Required for NFC wristband reading (nfc_manager) -->
+    <uses-permission android:name="android.permission.NFC"/>
+    <!-- Required for camera QR scanning -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
         android:label="wl_mobile"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"
