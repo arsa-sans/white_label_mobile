@@ -7,6 +7,16 @@ class SecureStorageService {
   static const String _keyTenantId = 'tenant_id';
   static const String _keyUserRole = 'user_role';
   static const String _keyUserData = 'user_data_json';
+  static const String _keyBaseUrl = 'base_backend_url';
+
+  // Base URL
+  Future<void> saveBaseUrl(String url) async {
+    await _storage.write(key: _keyBaseUrl, value: url);
+  }
+
+  Future<String?> getBaseUrl() async {
+    return await _storage.read(key: _keyBaseUrl);
+  }
 
   // Token
   Future<void> saveToken(String token) async {

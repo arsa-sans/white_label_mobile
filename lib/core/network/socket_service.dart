@@ -1,5 +1,6 @@
 import 'package:socket_io_client/socket_io_client.dart' as sio;
 import '../constants/api_endpoints.dart';
+import '../storage/secure_storage.dart';
 
 /// Singleton Socket.IO service for real-time communication with backend.
 ///
@@ -12,6 +13,7 @@ class SocketService {
 
   sio.Socket? _socket;
   bool _isConnected = false;
+  final SecureStorageService _storage = SecureStorageService();
 
   /// Whether the socket is currently connected
   bool get isConnected => _isConnected;
@@ -24,11 +26,15 @@ class SocketService {
 
   /// Initialize and connect to Socket.IO backend server.
   /// Uses the same base URL as the REST API (minus /api/v1).
-  void connect() {
+  Future<void> connect() async {
     if (_socket != null && _isConnected) return;
 
     // Extract base server URL from API endpoint (remove /api/v1 suffix)
-    final serverUrl = ApiEndpoints.baseUrl.replaceAll('/api/v1', '');
+    final customBaseUrl = await _storage.getBaseUrl();
+    final effectiveUrl = (customBaseUrl != null && customBaseUrl.trim().isNotEmpty)
+        ? customBaseUrl.trim()
+        : ApiEndpoints.baseUrl;
+    final serverUrl = effectiveUrl.replaceAll('/api/v1', '');
 
     _socket = sio.io(
       serverUrl,

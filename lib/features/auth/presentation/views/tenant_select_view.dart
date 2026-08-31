@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/storage/secure_storage.dart';
+import '../../../../core/constants/api_endpoints.dart';
 
 class TenantSelectView extends ConsumerStatefulWidget {
   const TenantSelectView({super.key});
@@ -13,24 +15,105 @@ class TenantSelectView extends ConsumerStatefulWidget {
 
 class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
   late TextEditingController _tenantController;
+  late TextEditingController _serverUrlController;
+  final SecureStorageService _storage = SecureStorageService();
+  bool _isTestingConnection = false;
+  String? _testConnectionStatus;
+  bool _testSuccess = false;
 
   @override
   void initState() {
     super.initState();
     final currentTenant = ref.read(authProvider).tenantId;
     _tenantController = TextEditingController(text: currentTenant);
+    _serverUrlController = TextEditingController(text: ApiEndpoints.baseUrl);
+    _loadCustomUrl();
   }
 
-  void _saveTenant(String tenantId) async {
-    await ref.read(authProvider.notifier).updateTenant(tenantId);
+  void _loadCustomUrl() async {
+    final custom = await _storage.getBaseUrl();
+    if (custom != null && custom.isNotEmpty && mounted) {
+      setState(() {
+        _serverUrlController.text = custom;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tenantController.dispose();
+    _serverUrlController.dispose();
+    super.dispose();
+  }
+
+  void _saveSettings() async {
+    final tenantId = _tenantController.text.trim();
+    final serverUrl = _serverUrlController.text.trim();
+
+    if (tenantId.isNotEmpty) {
+      await ref.read(authProvider.notifier).updateTenant(tenantId);
+    }
+    if (serverUrl.isNotEmpty) {
+      await _storage.saveBaseUrl(serverUrl);
+    }
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tenant diubah ke: $tenantId'),
+        const SnackBar(
+          content: Text('Konfigurasi server & tenant berhasil disimpan!'),
           backgroundColor: AppTheme.accentColor,
         ),
       );
-      context.pop();
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _testConnection() async {
+    final url = _serverUrlController.text.trim();
+    if (url.isEmpty) return;
+
+    setState(() {
+      _isTestingConnection = true;
+      _testConnectionStatus = null;
+    });
+
+    try {
+      final testDio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+        ),
+      );
+
+      // Hit health check endpoint (e.g. http://192.168.x.x:4000/health)
+      final healthUrl = url.replaceAll('/api/v1', '/health');
+      final res = await testDio.get(healthUrl);
+
+      if (res.statusCode == 200) {
+        setState(() {
+          _isTestingConnection = false;
+          _testSuccess = true;
+          _testConnectionStatus = '✓ Terhubung! Backend status: Online (${res.data['data']?['status'] ?? 'OK'})';
+        });
+      } else {
+        setState(() {
+          _isTestingConnection = false;
+          _testSuccess = false;
+          _testConnectionStatus = '✗ HTTP ${res.statusCode}: Backend merespon tetapi status tidak OK';
+        });
+      }
+    } on DioException catch (e) {
+      setState(() {
+        _isTestingConnection = false;
+        _testSuccess = false;
+        _testConnectionStatus = '✗ Gagal terhubung (${e.type.name}): Periksa IP laptop & pastikan HP di WiFi yang sama';
+      });
+    } catch (err) {
+      setState(() {
+        _isTestingConnection = false;
+        _testSuccess = false;
+        _testConnectionStatus = '✗ Gagal terhubung: $err';
+      });
     }
   }
 
@@ -38,25 +121,134 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pilih Tenant White Label'),
+        title: const Text('Pengaturan Server & Tenant'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ── Section 1: Backend Server URL ──
             const Text(
-              'White Label Tenant Selection',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              'Alamat IP / URL Backend',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 6),
             const Text(
-              'Aplikasi mobile dikonfigurasi untuk terhubung ke tenant spesifik via header X-Tenant-Id.',
+              'Sesuaikan dengan IP WiFi laptop kamu agar HP dapat terhubung ke backend.',
               style: TextStyle(fontSize: 12, color: AppTheme.slate400),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
-            // Tenant ID input
+            TextField(
+              controller: _serverUrlController,
+              decoration: const InputDecoration(
+                labelText: 'Backend Base URL',
+                prefixIcon: Icon(Icons.wifi, size: 20),
+                hintText: 'http://192.168.xxx.xxx:4000/api/v1',
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Test Connection Button & Status
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _isTestingConnection ? null : _testConnection,
+                  icon: _isTestingConnection
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryColor),
+                        )
+                      : const Icon(Icons.network_check, size: 16),
+                  label: const Text('Test Koneksi', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.secondaryColor,
+                    side: const BorderSide(color: AppTheme.secondaryColor),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ),
+
+            if (_testConnectionStatus != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _testSuccess
+                      ? AppTheme.emerald600.withValues(alpha: 0.15)
+                      : AppTheme.dangerColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _testSuccess ? AppTheme.emerald600 : AppTheme.dangerColor,
+                  ),
+                ),
+                child: Text(
+                  _testConnectionStatus!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: _testSuccess ? AppTheme.emerald600 : AppTheme.dangerColor,
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 10),
+            const Text(
+              'Pilihan Preset IP Cepat:',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate400),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('WiFi Saat Ini (192.168.115.51)', style: TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    setState(() {
+                      _serverUrlController.text = 'http://192.168.115.51:4000/api/v1';
+                    });
+                  },
+                ),
+                ActionChip(
+                  label: const Text('Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    setState(() {
+                      _serverUrlController.text = 'http://10.0.2.2:4000/api/v1';
+                    });
+                  },
+                ),
+                ActionChip(
+                  label: const Text('Localhost (localhost)', style: TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    setState(() {
+                      _serverUrlController.text = 'http://localhost:4000/api/v1';
+                    });
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 28),
+            const Divider(color: AppTheme.cardBorder),
+            const SizedBox(height: 16),
+
+            // ── Section 2: Tenant Configuration ──
+            const Text(
+              'White Label Tenant',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Tenant ID yang dikirim via header X-Tenant-Id.',
+              style: TextStyle(fontSize: 12, color: AppTheme.slate400),
+            ),
+            const SizedBox(height: 12),
+
             TextField(
               controller: _tenantController,
               decoration: const InputDecoration(
@@ -67,16 +259,16 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
             const SizedBox(height: 16),
 
             ElevatedButton(
-              onPressed: () => _saveTenant(_tenantController.text.trim()),
-              child: const Text('SIMPAN TENANT'),
+              onPressed: _saveSettings,
+              child: const Text('SIMPAN KONFIGURASI'),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             const Text(
               'Pilihan Preset Tenant Available:',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.slate400),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // Preset options
             ListTile(
@@ -88,7 +280,9 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
               leading: const Icon(Icons.music_note, color: AppTheme.primaryColor),
               title: const Text('tenant-001 (Soundwave Fest)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               subtitle: const Text('Default organizer tenant', style: TextStyle(color: AppTheme.slate400, fontSize: 11)),
-              onTap: () => _saveTenant('tenant-001'),
+              onTap: () {
+                _tenantController.text = 'tenant-001';
+              },
             ),
             const SizedBox(height: 8),
             ListTile(
@@ -100,7 +294,9 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
               leading: const Icon(Icons.sports_esports, color: AppTheme.secondaryColor),
               title: const Text('tenant-neon (Neon Cyber Fest)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               subtitle: const Text('Secondary white label tenant', style: TextStyle(color: AppTheme.slate400, fontSize: 11)),
-              onTap: () => _saveTenant('tenant-neon'),
+              onTap: () {
+                _tenantController.text = 'tenant-neon';
+              },
             ),
           ],
         ),

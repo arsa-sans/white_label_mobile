@@ -115,12 +115,12 @@ class _LoginViewState extends ConsumerState<LoginView> {
               ),
               const SizedBox(height: 24),
 
-              // Tenant Badge Button
+              // Tenant & Server Settings Button
               InkWell(
                 onTap: () => context.push('/tenant-select'),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppTheme.cardDark,
                     borderRadius: BorderRadius.circular(12),
@@ -131,15 +131,24 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.business, size: 18, color: AppTheme.secondaryColor),
+                          const Icon(Icons.settings_ethernet, size: 20, color: AppTheme.secondaryColor),
                           const SizedBox(width: 10),
-                          Text(
-                            'Tenant: ${authState.tenantId}',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tenant: ${authState.tenantId}',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              const Text(
+                                'Atur IP Server Backend / Tenant',
+                                style: TextStyle(fontSize: 10, color: AppTheme.slate400),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const Icon(Icons.swap_horiz, size: 18, color: AppTheme.slate400),
+                      const Icon(Icons.tune, size: 18, color: AppTheme.slate400),
                     ],
                   ),
                 ),

@@ -22,6 +22,12 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          final customUrl = await _storage.getBaseUrl();
+          if (customUrl != null && customUrl.trim().isNotEmpty) {
+            // Update dio options or request path baseUrl
+            options.baseUrl = customUrl.trim();
+          }
+
           final token = await _storage.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
