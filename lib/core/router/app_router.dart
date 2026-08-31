@@ -8,29 +8,56 @@ import '../../features/gate/presentation/views/gate_scanner_view.dart';
 import '../../features/booth/presentation/views/booth_cashier_view.dart';
 import '../../features/organizer/presentation/views/organizer_summary_view.dart';
 
+/// RouterNotifier listens to AuthState changes and triggers GoRouter redirection
+/// WITHOUT destroying and recreating the GoRouter instance.
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(
+      authProvider,
+      (previous, next) {
+        // Only notify router if auth status or role actually changed
+        if (previous?.isAuthenticated != next.isAuthenticated ||
+            previous?.user?.role != next.user?.role) {
+          notifyListeners();
+        }
+      },
+    );
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authProvider);
+    final isAuth = authState.isAuthenticated;
+    final isLoggingIn = state.matchedLocation == '/login' ||
+        state.matchedLocation == '/tenant-select';
+
+    if (!isAuth && !isLoggingIn) return '/login';
+
+    if (isAuth && isLoggingIn) {
+      final role = authState.user?.role ?? 'visitor';
+      if (role == 'gate_staff') return '/gate-scanner';
+      if (role == 'vendor') return '/booth-cashier';
+      if (role == 'organizer' || role == 'admin') return '/organizer-summary';
+      // Visitor is not allowed on mobile app
+      return null;
+    }
+
+    return null;
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     initialLocation: '/login',
-    redirect: (BuildContext context, GoRouterState state) {
-      final isAuth = authState.isAuthenticated;
-      final isLoggingIn = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/tenant-select';
-
-      if (!isAuth && !isLoggingIn) return '/login';
-
-      if (isAuth && isLoggingIn) {
-        final role = authState.user?.role ?? 'visitor';
-        if (role == 'gate_staff') return '/gate-scanner';
-        if (role == 'vendor') return '/booth-cashier';
-        if (role == 'organizer' || role == 'admin') return '/organizer-summary';
-        // Visitor is not allowed on mobile app
-        return null;
-      }
-
-      return null;
-    },
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       // Auth Views (MVVM)
       GoRoute(
@@ -58,4 +85,3 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-

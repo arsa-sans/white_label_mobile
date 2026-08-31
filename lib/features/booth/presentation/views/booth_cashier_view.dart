@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../viewmodels/booth_viewmodel.dart';
 
 class BoothCashierView extends ConsumerStatefulWidget {
@@ -92,7 +93,7 @@ class _BoothCashierViewState extends ConsumerState<BoothCashierView> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 8),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -104,6 +105,11 @@ class _BoothCashierViewState extends ConsumerState<BoothCashierView> {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppTheme.dangerColor, size: 20),
+            tooltip: 'Logout',
+            onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
       ),

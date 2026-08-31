@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../widgets/offline_sync_indicator.dart';
 import '../viewmodels/gate_viewmodel.dart';
 
@@ -83,20 +84,32 @@ class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerPr
   @override
   Widget build(BuildContext context) {
     final gateState = ref.watch(gateProvider);
+    final user = ref.watch(authProvider).user;
 
     return Scaffold(
       backgroundColor: AppTheme.slate50,
       appBar: AppBar(
-        title: const Text('Gate Scanner'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Gate Scanner', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(user?.name ?? 'Gate Staff', style: const TextStyle(fontSize: 10, color: AppTheme.slate500)),
+          ],
+        ),
         backgroundColor: Colors.white,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 8.0),
             child: OfflineSyncIndicator(
               isOnline: gateState.isOnline,
               pendingCount: gateState.pendingSyncCount,
               onSyncTap: () => ref.read(gateProvider.notifier).syncPendingLogs(),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppTheme.dangerColor, size: 20),
+            tooltip: 'Logout',
+            onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
       ),

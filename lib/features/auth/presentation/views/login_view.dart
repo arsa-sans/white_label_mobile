@@ -12,9 +12,23 @@ class LoginView extends ConsumerStatefulWidget {
 }
 
 class _LoginViewState extends ConsumerState<LoginView> {
-  final _emailController = TextEditingController(text: 'gate@soundwave.com');
-  final _passwordController = TextEditingController(text: 'GateStaff@2026!');
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: 'gate@soundwave.com');
+    _passwordController = TextEditingController(text: 'GateStaff@2026!');
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _handleLogin() async {
     final email = _emailController.text.trim();
@@ -31,8 +45,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
   }
 
   void _quickFill(String email, String password) {
-    _emailController.text = email;
-    _passwordController.text = password;
+    setState(() {
+      _emailController.text = email;
+      _passwordController.text = password;
+    });
   }
 
   @override
@@ -70,7 +86,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 ),
               ),
               const Text(
-                'Gate Access Staff & Mobile Control',
+                'Gate Access Staff & Organizer Control',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: AppTheme.slate400),
               ),
@@ -90,7 +106,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Aplikasi Mobile ini khusus untuk Gate Staff dan Organizer Event.',
+                        'Aplikasi Mobile ini khusus untuk Gate Staff, Organizer Event, dan Vendor.',
                         style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                     ),
@@ -165,7 +181,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('MASUK KE AKUN STAFF'),
+                    : const Text('MASUK KE AKUN'),
               ),
 
               const SizedBox(height: 20),
@@ -181,12 +197,19 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 runSpacing: 8,
                 children: [
                   ActionChip(
+                    avatar: const Icon(Icons.qr_code_scanner, size: 16, color: AppTheme.primaryColor),
                     label: const Text('Gate Staff', style: TextStyle(fontSize: 11)),
                     onPressed: () => _quickFill('gate@soundwave.com', 'GateStaff@2026!'),
                   ),
                   ActionChip(
+                    avatar: const Icon(Icons.analytics_outlined, size: 16, color: AppTheme.secondaryColor),
                     label: const Text('Organizer', style: TextStyle(fontSize: 11)),
                     onPressed: () => _quickFill('organizer@soundwave.com', 'Organizer@2026!'),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(Icons.storefront_outlined, size: 16, color: AppTheme.accentColor),
+                    label: const Text('Vendor Booth', style: TextStyle(fontSize: 11)),
+                    onPressed: () => _quickFill('vendor@demo.wl', 'Vendor@2026!'),
                   ),
                 ],
               ),
@@ -194,7 +217,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
               const SizedBox(height: 24),
 
               const Text(
-                'Gate Staff didaftarkan oleh Organizer melalui Web Dashboard. Visitor & Organizer pendaftaran dapat diakses melalui Portal Web.',
+                'Gate Staff & Vendor didaftarkan oleh Organizer melalui Web Dashboard. Visitor & Organizer pendaftaran dapat diakses melalui Portal Web.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 11, color: AppTheme.slate400, height: 1.4),
               ),
@@ -205,4 +228,3 @@ class _LoginViewState extends ConsumerState<LoginView> {
     );
   }
 }
-
