@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../widgets/offline_sync_indicator.dart';
@@ -16,21 +17,27 @@ class GateScannerView extends ConsumerStatefulWidget {
   ConsumerState<GateScannerView> createState() => _GateScannerViewState();
 }
 
-class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerProviderStateMixin {
+class _GateScannerViewState extends ConsumerState<GateScannerView>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _qrController = TextEditingController();
   late final MobileScannerController _cameraController;
   late AnimationController _flashAnimController;
   StreamSubscription? _connectivitySub;
 
+  bool _hasCameraPermission = false;
+  bool _isPermanentlyDenied = false;
+  bool _isCheckingPermission = true;
+  bool _isProcessingLiveScan = false;
+  bool _torchOn = false;
+
   // Debounce & cooldown tracking for live camera scanning
   String? _lastScannedToken;
   DateTime? _lastScannedTime;
-  bool _isProcessingLiveScan = false;
-  bool _torchOn = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _cameraController = MobileScannerController(
       detectionSpeed: DetectionSpeed.normal,
       facing: CameraFacing.back,
@@ -38,6 +45,70 @@ class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerPr
     );
     _flashAnimController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
     _initConnectivity();
+    _checkAndRequestCameraPermission();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_cameraController.value.hasCameraPermission) return;
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _checkAndRequestCameraPermission();
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        _cameraController.stop();
+        break;
+    }
+  }
+
+  Future<void> _checkAndRequestCameraPermission() async {
+    setState(() => _isCheckingPermission = true);
+
+    try {
+      final status = await Permission.camera.status;
+
+      if (status.isGranted) {
+        setState(() {
+          _hasCameraPermission = true;
+          _isPermanentlyDenied = false;
+          _isCheckingPermission = false;
+        });
+        await _cameraController.start();
+        return;
+      }
+
+      // Request permission
+      final result = await Permission.camera.request();
+
+      if (result.isGranted) {
+        setState(() {
+          _hasCameraPermission = true;
+          _isPermanentlyDenied = false;
+          _isCheckingPermission = false;
+        });
+        await _cameraController.start();
+      } else if (result.isPermanentlyDenied) {
+        setState(() {
+          _hasCameraPermission = false;
+          _isPermanentlyDenied = true;
+          _isCheckingPermission = false;
+        });
+      } else {
+        setState(() {
+          _hasCameraPermission = false;
+          _isPermanentlyDenied = false;
+          _isCheckingPermission = false;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _isCheckingPermission = false;
+      });
+    }
   }
 
   void _initConnectivity() async {
@@ -75,6 +146,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerPr
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cameraController.dispose();
     _flashAnimController.dispose();
     _connectivitySub?.cancel();
@@ -184,7 +256,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerPr
                 ),
               ),
 
-              // Live Camera Viewport (MobileScanner)
+              // Camera Viewport / Permission State
               Expanded(
                 flex: 4,
                 child: Container(
@@ -192,104 +264,159 @@ class _GateScannerViewState extends ConsumerState<GateScannerView> with TickerPr
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Real Camera Stream
-                      MobileScanner(
-                        controller: _cameraController,
-                        onDetect: _onBarcodeDetected,
-                        errorBuilder: (context, error) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.videocam_off_outlined, color: Colors.white54, size: 56),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    'Izin Kamera Diperlukan',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Berikan izin kamera agar aplikasi dapat memindai tiket pengunjung secara langsung.',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 14),
-                                  ElevatedButton.icon(
-                                    icon: const Icon(Icons.refresh, size: 16),
-                                    label: const Text('Minta Izin / Coba Lagi', style: TextStyle(fontSize: 12)),
-                                    onPressed: () => _cameraController.start(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Scanner Frame Overlay
-                      _ScannerFrame(),
-
-                      // Camera Helper Controls (Torch & Switch Camera)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  _torchOn ? Icons.flash_on : Icons.flash_off,
-                                  color: _torchOn ? Colors.amber : Colors.white,
-                                  size: 20,
+                      if (_isCheckingPermission)
+                        const Center(
+                          child: CircularProgressIndicator(color: AppTheme.primaryColor),
+                        )
+                      else if (!_hasCameraPermission)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 64),
+                                const SizedBox(height: 14),
+                                const Text(
+                                  'Izin Kamera Diperlukan',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
-                                tooltip: 'Flashlight',
-                                onPressed: _toggleTorch,
-                              ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _isPermanentlyDenied
+                                      ? 'Izin kamera dinonaktifkan di pengaturan perangkat. Silakan aktifkan izin kamera melalui Pengaturan Aplikasi.'
+                                      : 'Aplikasi memerlukan izin kamera untuk memindai kode QR tiket pengunjung.',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 18),
+                                ElevatedButton.icon(
+                                  icon: Icon(
+                                    _isPermanentlyDenied ? Icons.settings : Icons.camera_alt,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                                  label: Text(
+                                    _isPermanentlyDenied ? 'Buka Pengaturan Aplikasi' : 'Izinkan Akses Kamera',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryColor,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  onPressed: () {
+                                    if (_isPermanentlyDenied) {
+                                      openAppSettings();
+                                    } else {
+                                      _checkAndRequestCameraPermission();
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 20),
-                                tooltip: 'Ganti Kamera',
-                                onPressed: () => _cameraController.switchCamera(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Scanning hint
-                      Positioned(
-                        bottom: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+                        )
+                      else ...[
+                        // Real Camera Stream
+                        MobileScanner(
+                          controller: _cameraController,
+                          onDetect: _onBarcodeDetected,
+                          errorBuilder: (context, error) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.videocam_off_outlined, color: Colors.white54, size: 56),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'Kamera Tidak Tersedia',
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Error: ${error.errorCode.name}',
+                                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 14),
+                                    ElevatedButton.icon(
+                                      icon: const Icon(Icons.refresh, size: 16),
+                                      label: const Text('Mulai Ulang Kamera', style: TextStyle(fontSize: 12)),
+                                      onPressed: () => _checkAndRequestCameraPermission(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // Scanner Frame Overlay
+                        _ScannerFrame(),
+
+                        // Camera Helper Controls (Torch & Switch Camera)
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Row(
                             children: [
-                              Icon(Icons.qr_code_scanner, color: AppTheme.accentColor, size: 14),
-                              SizedBox(width: 6),
-                              Text(
-                                'Arahkan QR Tiket ke dalam bingkai',
-                                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: IconButton(
+                                  icon: Icon(
+                                    _torchOn ? Icons.flash_on : Icons.flash_off,
+                                    color: _torchOn ? Colors.amber : Colors.white,
+                                    size: 20,
+                                  ),
+                                  tooltip: 'Flashlight',
+                                  onPressed: _toggleTorch,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 20),
+                                  tooltip: 'Ganti Kamera',
+                                  onPressed: () => _cameraController.switchCamera(),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
+
+                        // Scanning hint
+                        Positioned(
+                          bottom: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.qr_code_scanner, color: AppTheme.accentColor, size: 14),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Arahkan QR Tiket ke dalam bingkai',
+                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
