@@ -207,10 +207,10 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
               runSpacing: 8,
               children: [
                 ActionChip(
-                  label: const Text('WiFi Saat Ini (192.168.110.132)', style: TextStyle(fontSize: 11)),
+                  label: const Text('WiFi Saat Ini (192.168.0.110)', style: TextStyle(fontSize: 11)),
                   onPressed: () {
                     setState(() {
-                      _serverUrlController.text = 'http://192.168.110.132:4000/api/v1';
+                      _serverUrlController.text = 'http://192.168.0.110:4000/api/v1';
                     });
                   },
                 ),
