@@ -24,9 +24,6 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
   late AnimationController _flashAnimController;
   StreamSubscription? _connectivitySub;
 
-  bool _hasCameraPermission = false;
-  bool _isPermanentlyDenied = false;
-  bool _isCheckingPermission = true;
   bool _isProcessingLiveScan = false;
   bool _torchOn = false;
 
@@ -38,23 +35,36 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Initialize MobileScanner controller
     _cameraController = MobileScannerController(
       detectionSpeed: DetectionSpeed.normal,
       facing: CameraFacing.back,
       torchEnabled: false,
     );
-    _flashAnimController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+
+    _flashAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
     _initConnectivity();
-    _checkAndRequestCameraPermission();
+    _requestPermissionDirectly();
+  }
+
+  void _requestPermissionDirectly() async {
+    final status = await Permission.camera.status;
+    if (!status.isGranted) {
+      await Permission.camera.request();
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_cameraController.value.hasCameraPermission) return;
-
+    super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
-        _checkAndRequestCameraPermission();
+        _cameraController.start();
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -62,52 +72,6 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
       case AppLifecycleState.hidden:
         _cameraController.stop();
         break;
-    }
-  }
-
-  Future<void> _checkAndRequestCameraPermission() async {
-    setState(() => _isCheckingPermission = true);
-
-    try {
-      final status = await Permission.camera.status;
-
-      if (status.isGranted) {
-        setState(() {
-          _hasCameraPermission = true;
-          _isPermanentlyDenied = false;
-          _isCheckingPermission = false;
-        });
-        await _cameraController.start();
-        return;
-      }
-
-      // Request permission
-      final result = await Permission.camera.request();
-
-      if (result.isGranted) {
-        setState(() {
-          _hasCameraPermission = true;
-          _isPermanentlyDenied = false;
-          _isCheckingPermission = false;
-        });
-        await _cameraController.start();
-      } else if (result.isPermanentlyDenied) {
-        setState(() {
-          _hasCameraPermission = false;
-          _isPermanentlyDenied = true;
-          _isCheckingPermission = false;
-        });
-      } else {
-        setState(() {
-          _hasCameraPermission = false;
-          _isPermanentlyDenied = false;
-          _isCheckingPermission = false;
-        });
-      }
-    } catch (_) {
-      setState(() {
-        _isCheckingPermission = false;
-      });
     }
   }
 
@@ -256,7 +220,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                 ),
               ),
 
-              // Camera Viewport / Permission State
+              // Live Camera Viewport
               Expanded(
                 flex: 4,
                 child: Container(
@@ -264,159 +228,130 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (_isCheckingPermission)
-                        const Center(
-                          child: CircularProgressIndicator(color: AppTheme.primaryColor),
-                        )
-                      else if (!_hasCameraPermission)
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 64),
-                                const SizedBox(height: 14),
-                                const Text(
-                                  'Izin Kamera Diperlukan',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _isPermanentlyDenied
-                                      ? 'Izin kamera dinonaktifkan di pengaturan perangkat. Silakan aktifkan izin kamera melalui Pengaturan Aplikasi.'
-                                      : 'Aplikasi memerlukan izin kamera untuk memindai kode QR tiket pengunjung.',
-                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 18),
-                                ElevatedButton.icon(
-                                  icon: Icon(
-                                    _isPermanentlyDenied ? Icons.settings : Icons.camera_alt,
-                                    size: 18,
-                                    color: Colors.white,
+                      // Camera Stream
+                      MobileScanner(
+                        controller: _cameraController,
+                        onDetect: _onBarcodeDetected,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 48),
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'Kamera Belum Aktif',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
-                                  label: Text(
-                                    _isPermanentlyDenied ? 'Buka Pengaturan Aplikasi' : 'Izinkan Akses Kamera',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    error.errorCode == MobileScannerErrorCode.permissionDenied
+                                        ? 'Izin kamera belum diberikan. Aktifkan izin untuk memindai tiket.'
+                                        : 'Error kamera: ${error.errorCode.name}',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primaryColor,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        icon: const Icon(Icons.refresh, size: 14),
+                                        label: const Text('Buka Kamera', style: TextStyle(fontSize: 11)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.primaryColor,
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                        ),
+                                        onPressed: () async {
+                                          await Permission.camera.request();
+                                          await _cameraController.start();
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      OutlinedButton.icon(
+                                        icon: const Icon(Icons.settings, size: 14),
+                                        label: const Text('Pengaturan', style: TextStyle(fontSize: 11)),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          side: const BorderSide(color: Colors.white54),
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                        ),
+                                        onPressed: () => openAppSettings(),
+                                      ),
+                                    ],
                                   ),
-                                  onPressed: () {
-                                    if (_isPermanentlyDenied) {
-                                      openAppSettings();
-                                    } else {
-                                      _checkAndRequestCameraPermission();
-                                    }
-                                  },
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        )
-                      else ...[
-                        // Real Camera Stream
-                        MobileScanner(
-                          controller: _cameraController,
-                          onDetect: _onBarcodeDetected,
-                          errorBuilder: (context, error) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.videocam_off_outlined, color: Colors.white54, size: 56),
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                      'Kamera Tidak Tersedia',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Error: ${error.errorCode.name}',
-                                      style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 14),
-                                    ElevatedButton.icon(
-                                      icon: const Icon(Icons.refresh, size: 16),
-                                      label: const Text('Mulai Ulang Kamera', style: TextStyle(fontSize: 12)),
-                                      onPressed: () => _checkAndRequestCameraPermission(),
-                                    ),
-                                  ],
-                                ),
+                          );
+                        },
+                      ),
+
+                      // Scanner Frame Overlay
+                      _ScannerFrame(),
+
+                      // Camera Helper Controls (Torch & Switch Camera)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                            );
-                          },
+                              child: IconButton(
+                                icon: Icon(
+                                  _torchOn ? Icons.flash_on : Icons.flash_off,
+                                  color: _torchOn ? Colors.amber : Colors.white,
+                                  size: 20,
+                                ),
+                                tooltip: 'Flashlight',
+                                onPressed: _toggleTorch,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 20),
+                                tooltip: 'Ganti Kamera',
+                                onPressed: () => _cameraController.switchCamera(),
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
 
-                        // Scanner Frame Overlay
-                        _ScannerFrame(),
-
-                        // Camera Helper Controls (Torch & Switch Camera)
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Row(
+                      // Scanning hint
+                      Positioned(
+                        bottom: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: IconButton(
-                                  icon: Icon(
-                                    _torchOn ? Icons.flash_on : Icons.flash_off,
-                                    color: _torchOn ? Colors.amber : Colors.white,
-                                    size: 20,
-                                  ),
-                                  tooltip: 'Flashlight',
-                                  onPressed: _toggleTorch,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 20),
-                                  tooltip: 'Ganti Kamera',
-                                  onPressed: () => _cameraController.switchCamera(),
-                                ),
+                              Icon(Icons.qr_code_scanner, color: AppTheme.accentColor, size: 14),
+                              SizedBox(width: 6),
+                              Text(
+                                'Arahkan QR Tiket ke dalam bingkai',
+                                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
                         ),
-
-                        // Scanning hint
-                        Positioned(
-                          bottom: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.qr_code_scanner, color: AppTheme.accentColor, size: 14),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Arahkan QR Tiket ke dalam bingkai',
-                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
