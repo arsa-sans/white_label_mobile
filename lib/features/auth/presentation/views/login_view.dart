@@ -106,7 +106,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Aplikasi Mobile ini khusus untuk Gate Staff, Organizer Event, dan Vendor.',
+                        'Aplikasi Mobile ini khusus untuk Gate Staff dan Organizer Event.',
                         style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                     ),
@@ -215,18 +215,13 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     label: const Text('Organizer', style: TextStyle(fontSize: 11)),
                     onPressed: () => _quickFill('organizer@soundwave.com', 'Organizer@2026!'),
                   ),
-                  ActionChip(
-                    avatar: const Icon(Icons.storefront_outlined, size: 16, color: AppTheme.accentColor),
-                    label: const Text('Vendor Booth', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('vendor@demo.wl', 'Vendor@2026!'),
-                  ),
                 ],
               ),
 
               const SizedBox(height: 24),
 
               const Text(
-                'Gate Staff & Vendor didaftarkan oleh Organizer melalui Web Dashboard. Visitor & Organizer pendaftaran dapat diakses melalui Portal Web.',
+                'Gate Staff didaftarkan oleh Organizer melalui Web Dashboard. Pendaftaran akun dapat diakses melalui Portal Web.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 11, color: AppTheme.slate400, height: 1.4),
               ),

@@ -141,10 +141,12 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
 
     if (mounted) {
       _flashAnimController.forward(from: 0).then((_) {
-        if (mounted) {
-          ref.read(gateProvider.notifier).hideFlash();
-          _isProcessingLiveScan = false;
-        }
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (mounted && ref.read(gateProvider).showFlash) {
+            ref.read(gateProvider.notifier).hideFlash();
+            _isProcessingLiveScan = false;
+          }
+        });
       });
     }
   }
@@ -434,11 +436,18 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                                 itemBuilder: (_, i) {
                                   final log = gateState.sessionLogs[i];
                                   final isValid = log['result'] == 'valid' || log['result'] == 'offline_valid';
+                                  final hasOwner = (log['owner_name'] ?? '').toString().isNotEmpty;
+                                  final title = hasOwner ? log['owner_name'] : log['token'];
+                                  final sub = [
+                                    if ((log['tier_name'] ?? '').toString().isNotEmpty) log['tier_name'],
+                                    if ((log['event_name'] ?? '').toString().isNotEmpty) log['event_name'],
+                                  ].join(' • ');
+
                                   return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: AppTheme.slate200),
                                     ),
                                     child: Row(
@@ -446,27 +455,49 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                                         Icon(
                                           isValid ? Icons.check_circle : Icons.cancel,
                                           color: isValid ? AppTheme.emerald600 : AppTheme.red600,
-                                          size: 18,
+                                          size: 20,
                                         ),
                                         const SizedBox(width: 10),
                                         Expanded(
-                                          child: Text(
-                                            log['token'],
-                                            style: const TextStyle(
-                                              fontFamily: 'monospace',
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.slate800,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                title,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.slate900,
+                                                ),
+                                              ),
+                                              if (sub.isNotEmpty)
+                                                Text(
+                                                  sub,
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: AppTheme.slate500,
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
-                                        Text(
-                                          log['result'].toString().toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: isValid ? AppTheme.emerald600 : AppTheme.red600,
-                                          ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              log['result'].toString().toUpperCase(),
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: isValid ? AppTheme.emerald600 : AppTheme.red600,
+                                              ),
+                                            ),
+                                            if (log['time'] is DateTime)
+                                              Text(
+                                                TimeOfDay.fromDateTime(log['time']).format(context),
+                                                style: const TextStyle(fontSize: 9, color: AppTheme.slate400),
+                                              ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -484,32 +515,151 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
           // Fullscreen Flash Feedback Overlay
           if (gateState.showFlash)
             Positioned.fill(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                color: gateState.flashSuccess
-                    ? AppTheme.emerald600.withAlpha(225)
-                    : AppTheme.red600.withAlpha(225),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        gateState.flashSuccess ? Icons.check_circle_outline : Icons.highlight_off,
-                        size: 96,
-                        color: Colors.white,
+              child: GestureDetector(
+                onTap: () => ref.read(gateProvider.notifier).hideFlash(),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  color: gateState.flashSuccess
+                      ? const Color(0xEE059669)
+                      : const Color(0xEEDC2626),
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            gateState.flashSuccess ? Icons.check_circle_outline : Icons.highlight_off,
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            gateState.flashSuccess ? 'TIKET VALID ✓' : 'TIKET INVALID ✗',
+                            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Detailed Card
+                          if (gateState.lastScanDetail != null)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (gateState.lastScanDetail!.ownerName.isNotEmpty) ...[
+                                    _DetailRow(
+                                      icon: Icons.person_outline,
+                                      label: 'Pemilik Tiket',
+                                      value: gateState.lastScanDetail!.ownerName,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  if (gateState.lastScanDetail!.ownerEmail.isNotEmpty) ...[
+                                    _DetailRow(
+                                      icon: Icons.email_outlined,
+                                      label: 'Email',
+                                      value: gateState.lastScanDetail!.ownerEmail,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  if (gateState.lastScanDetail!.tierName.isNotEmpty) ...[
+                                    _DetailRow(
+                                      icon: Icons.confirmation_number_outlined,
+                                      label: 'Tier / Kategori',
+                                      value: gateState.lastScanDetail!.tierName,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  if (gateState.lastScanDetail!.eventName.isNotEmpty) ...[
+                                    _DetailRow(
+                                      icon: Icons.event_outlined,
+                                      label: 'Event',
+                                      value: gateState.lastScanDetail!.eventName,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  if (gateState.lastScanDetail!.message.isNotEmpty && !gateState.flashSuccess) ...[
+                                    _DetailRow(
+                                      icon: Icons.warning_amber_rounded,
+                                      label: 'Keterangan',
+                                      value: gateState.lastScanDetail!.message,
+                                      valueColor: Colors.amberAccent,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  _DetailRow(
+                                    icon: Icons.access_time,
+                                    label: 'Waktu Scan',
+                                    value: DateTime.now().toString().split('.')[0],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Ketuk layar untuk menutup',
+                              style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        gateState.flashSuccess ? 'TIKET VALID ✓' : 'TIKET INVALID ✗',
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
         ],
       ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.white70),
+        const SizedBox(width: 8),
+        Text('$label: ', style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: valueColor ?? Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

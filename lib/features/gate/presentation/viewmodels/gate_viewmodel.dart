@@ -3,6 +3,28 @@ import '../../data/repositories/gate_repository.dart';
 import '../../../../core/storage/local_database.dart';
 import '../../../../core/network/socket_service.dart';
 
+class GateScanDetail {
+  final String result;
+  final String ticketId;
+  final String ownerName;
+  final String ownerEmail;
+  final String eventName;
+  final String tierName;
+  final String scannedAt;
+  final String message;
+
+  const GateScanDetail({
+    required this.result,
+    this.ticketId = '',
+    this.ownerName = '',
+    this.ownerEmail = '',
+    this.eventName = '',
+    this.tierName = '',
+    this.scannedAt = '',
+    this.message = '',
+  });
+}
+
 class GateState {
   final bool isOnline;
   final bool isScanning;
@@ -13,6 +35,7 @@ class GateState {
   final int sessionInvalid;
   final int pendingSyncCount;
   final List<Map<String, dynamic>> sessionLogs;
+  final GateScanDetail? lastScanDetail;
   /// Real-time notification message from another device's scan
   final String? remoteNotification;
 
@@ -26,6 +49,7 @@ class GateState {
     this.sessionInvalid = 0,
     this.pendingSyncCount = 0,
     this.sessionLogs = const [],
+    this.lastScanDetail,
     this.remoteNotification,
   });
 
@@ -39,6 +63,7 @@ class GateState {
     int? sessionInvalid,
     int? pendingSyncCount,
     List<Map<String, dynamic>>? sessionLogs,
+    GateScanDetail? lastScanDetail,
     String? remoteNotification,
     bool clearNotification = false,
   }) {
@@ -52,6 +77,7 @@ class GateState {
       sessionInvalid: sessionInvalid ?? this.sessionInvalid,
       pendingSyncCount: pendingSyncCount ?? this.pendingSyncCount,
       sessionLogs: sessionLogs ?? this.sessionLogs,
+      lastScanDetail: lastScanDetail ?? this.lastScanDetail,
       remoteNotification: clearNotification ? null : (remoteNotification ?? this.remoteNotification),
     );
   }
@@ -146,17 +172,30 @@ class GateViewModel extends Notifier<GateState> {
 
     String result = 'invalid';
     bool isValid = false;
+    GateScanDetail? detail;
 
     if (state.isOnline) {
       try {
         final res = await _repository.scanTicket(qrToken);
-        result = res['data']?['result'] ?? 'invalid';
+        final data = res['data'] ?? {};
+        result = data['result'] ?? 'invalid';
         isValid = result == 'valid';
+
+        detail = GateScanDetail(
+          result: result,
+          ticketId: data['ticket_id']?.toString() ?? '',
+          ownerName: data['ticket_owner_name']?.toString() ?? '',
+          ownerEmail: data['ticket_owner_email']?.toString() ?? '',
+          eventName: data['event_name']?.toString() ?? '',
+          tierName: data['tier_name']?.toString() ?? data['seat_name']?.toString() ?? '',
+          scannedAt: data['scanned_at']?.toString() ?? DateTime.now().toIso8601String(),
+          message: data['message']?.toString() ?? '',
+        );
 
         await _db.insertScanLog(
           token: qrToken,
           result: result,
-          message: res['data']?['message']?.toString() ?? '',
+          message: data['message']?.toString() ?? '',
         );
 
         final logs = await _db.getPendingLogs();
@@ -167,6 +206,11 @@ class GateViewModel extends Notifier<GateState> {
         // Fallback to offline mode
         result = 'offline_valid';
         isValid = true;
+        detail = GateScanDetail(
+          result: 'offline_valid',
+          message: 'Saved offline — pending sync',
+          scannedAt: DateTime.now().toIso8601String(),
+        );
         await _db.insertScanLog(
           token: qrToken,
           result: 'offline_valid',
@@ -177,6 +221,11 @@ class GateViewModel extends Notifier<GateState> {
     } else {
       result = 'offline_valid';
       isValid = true;
+      detail = GateScanDetail(
+        result: 'offline_valid',
+        message: 'Saved offline — pending sync',
+        scannedAt: DateTime.now().toIso8601String(),
+      );
       await _db.insertScanLog(
         token: qrToken,
         result: 'offline_valid',
@@ -189,6 +238,10 @@ class GateViewModel extends Notifier<GateState> {
       {
         'token': qrToken.length > 16 ? '${qrToken.substring(0, 16)}...' : qrToken,
         'result': result,
+        'owner_name': detail.ownerName,
+        'tier_name': detail.tierName,
+        'event_name': detail.eventName,
+        'message': detail.message,
         'time': DateTime.now(),
         'synced': state.isOnline,
       },
@@ -199,6 +252,7 @@ class GateViewModel extends Notifier<GateState> {
       isScanning: false,
       showFlash: true,
       flashSuccess: isValid,
+      lastScanDetail: detail,
       sessionScanCount: state.sessionScanCount + 1,
       sessionValid: isValid ? state.sessionValid + 1 : state.sessionValid,
       sessionInvalid: !isValid ? state.sessionInvalid + 1 : state.sessionInvalid,
