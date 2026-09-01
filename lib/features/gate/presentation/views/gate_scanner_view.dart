@@ -553,14 +553,14 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (gateState.lastScanDetail!.ownerName.isNotEmpty) ...[
-                                    _DetailRow(
-                                      icon: Icons.person_outline,
-                                      label: 'Pemilik Tiket',
-                                      value: gateState.lastScanDetail!.ownerName,
-                                    ),
-                                    const SizedBox(height: 10),
-                                  ],
+                                  _DetailRow(
+                                    icon: Icons.person_outline,
+                                    label: 'Pemilik Tiket',
+                                    value: gateState.lastScanDetail!.ownerName.isNotEmpty
+                                        ? gateState.lastScanDetail!.ownerName
+                                        : 'Data tidak ditemukan',
+                                  ),
+                                  const SizedBox(height: 10),
                                   if (gateState.lastScanDetail!.ownerEmail.isNotEmpty) ...[
                                     _DetailRow(
                                       icon: Icons.email_outlined,

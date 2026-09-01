@@ -19,8 +19,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController(text: 'gate@soundwave.com');
-    _passwordController = TextEditingController(text: 'GateStaff@2026!');
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -42,13 +42,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
         SnackBar(content: Text(err), backgroundColor: AppTheme.dangerColor),
       );
     }
-  }
-
-  void _quickFill(String email, String password) {
-    setState(() {
-      _emailController.text = email;
-      _passwordController.text = password;
-    });
   }
 
   @override
@@ -191,31 +184,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Text('MASUK KE AKUN'),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Quick Preset Accounts for Demo
-              const Text(
-                'Akses Demo Cepat:',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.slate400),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ActionChip(
-                    avatar: const Icon(Icons.qr_code_scanner, size: 16, color: AppTheme.primaryColor),
-                    label: const Text('Gate Staff', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('gate@soundwave.com', 'GateStaff@2026!'),
-                  ),
-                  ActionChip(
-                    avatar: const Icon(Icons.analytics_outlined, size: 16, color: AppTheme.secondaryColor),
-                    label: const Text('Organizer', style: TextStyle(fontSize: 11)),
-                    onPressed: () => _quickFill('organizer@soundwave.com', 'Organizer@2026!'),
-                  ),
-                ],
               ),
 
               const SizedBox(height: 24),
