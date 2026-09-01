@@ -19,7 +19,7 @@ dependencies:
   nfc_manager: ^4.2.1
   path: ^1.9.1
   path_provider: ^2.1.5
-  permission_handler: ^13.0.1
+  permission_handler: ^11.3.1
   qr_flutter: ^4.1.0
   riverpod: ^3.4.2
   socket_io_client: ^3.1.6
