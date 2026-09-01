@@ -94,11 +94,11 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
           final isSuccess = next.startsWith('✓');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(next, style: const TextStyle(fontWeight: FontWeight.w600)),
-              backgroundColor: isSuccess ? AppTheme.emerald600 : AppTheme.amber600,
+              content: Text(next, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+              backgroundColor: isSuccess ? AppTheme.zinc900 : AppTheme.dangerColor,
               behavior: SnackBarBehavior.floating,
               margin: const EdgeInsets.all(12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               duration: const Duration(seconds: 3),
             ),
           );
@@ -177,16 +177,17 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
-      backgroundColor: AppTheme.slate50,
+      backgroundColor: AppTheme.bgLight,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Gate Scanner', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-            Text(user?.name ?? 'Gate Staff', style: const TextStyle(fontSize: 10, color: AppTheme.slate500)),
+            const Text('Gate Scanner', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.zinc950)),
+            Text(user?.name ?? 'Gate Staff', style: const TextStyle(fontSize: 10, color: AppTheme.zinc500)),
           ],
         ),
         backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -197,7 +198,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.logout, color: AppTheme.dangerColor, size: 20),
+            icon: const Icon(Icons.logout, color: AppTheme.zinc600, size: 20),
             tooltip: 'Logout',
             onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
@@ -207,22 +208,23 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
         children: [
           Column(
             children: [
-              // Session Stats Header
+              // Session Stats Header (Bento Bar)
               Container(
                 color: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _StatPill('TOTAL SCAN', '${gateState.sessionScanCount}', AppTheme.slate900),
-                    _StatPill('VALID', '${gateState.sessionValid}', AppTheme.emerald600),
-                    _StatPill('INVALID', '${gateState.sessionInvalid}', AppTheme.red600),
-                    _StatPill('PENDING SYNC', '${gateState.pendingSyncCount}', AppTheme.amber600),
+                    _StatPill('TOTAL SCAN', '${gateState.sessionScanCount}', AppTheme.zinc950),
+                    _StatPill('VALID', '${gateState.sessionValid}', AppTheme.zinc950),
+                    _StatPill('INVALID', '${gateState.sessionInvalid}', AppTheme.dangerColor),
+                    _StatPill('PENDING', '${gateState.pendingSyncCount}', AppTheme.zinc500),
                   ],
                 ),
               ),
+              const Divider(height: 1, color: AppTheme.zinc200),
 
-              // Live Camera Viewport
+              // Live Camera Viewport with RepaintBoundary for high performance
               Expanded(
                 flex: 4,
                 child: Container(
@@ -230,66 +232,69 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Camera Stream
-                      MobileScanner(
-                        controller: _cameraController,
-                        onDetect: _onBarcodeDetected,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 48),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    'Kamera Belum Aktif',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    error.errorCode == MobileScannerErrorCode.permissionDenied
-                                        ? 'Izin kamera belum diberikan. Aktifkan izin untuk memindai tiket.'
-                                        : 'Error kamera: ${error.errorCode.name}',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ElevatedButton.icon(
-                                        icon: const Icon(Icons.refresh, size: 14),
-                                        label: const Text('Buka Kamera', style: TextStyle(fontSize: 11)),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.primaryColor,
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      // Camera Stream wrapped in RepaintBoundary
+                      RepaintBoundary(
+                        child: MobileScanner(
+                          controller: _cameraController,
+                          onDetect: _onBarcodeDetected,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.camera_alt_outlined, color: Colors.white70, size: 48),
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      'Kamera Belum Aktif',
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      error.errorCode == MobileScannerErrorCode.permissionDenied
+                                          ? 'Izin kamera belum diberikan. Aktifkan izin untuk memindai tiket.'
+                                          : 'Error kamera: ${error.errorCode.name}',
+                                      style: const TextStyle(color: Colors.white70, fontSize: 11),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.refresh, size: 14),
+                                          label: const Text('Buka Kamera', style: TextStyle(fontSize: 11)),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppTheme.zinc900,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          ),
+                                          onPressed: () async {
+                                            await Permission.camera.request();
+                                            await _cameraController.start();
+                                          },
                                         ),
-                                        onPressed: () async {
-                                          await Permission.camera.request();
-                                          await _cameraController.start();
-                                        },
-                                      ),
-                                      const SizedBox(width: 8),
-                                      OutlinedButton.icon(
-                                        icon: const Icon(Icons.settings, size: 14),
-                                        label: const Text('Pengaturan', style: TextStyle(fontSize: 11)),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: Colors.white,
-                                          side: const BorderSide(color: Colors.white54),
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                        const SizedBox(width: 8),
+                                        OutlinedButton.icon(
+                                          icon: const Icon(Icons.settings, size: 14),
+                                          label: const Text('Pengaturan', style: TextStyle(fontSize: 11)),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            side: const BorderSide(color: Colors.white54),
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          ),
+                                          onPressed: () => openAppSettings(),
                                         ),
-                                        onPressed: () => openAppSettings(),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
 
                       // Scanner Frame Overlay
@@ -344,7 +349,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.qr_code_scanner, color: AppTheme.accentColor, size: 14),
+                              Icon(Icons.qr_code_scanner, color: Colors.white, size: 14),
                               SizedBox(width: 6),
                               Text(
                                 'Arahkan QR Tiket ke dalam bingkai',
@@ -368,13 +373,14 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                     Expanded(
                       child: TextField(
                         controller: _qrController,
+                        style: const TextStyle(fontSize: 12, color: AppTheme.zinc950),
                         decoration: InputDecoration(
                           hintText: 'Atau ketik / tempel token QR manual...',
-                          hintStyle: const TextStyle(fontSize: 11, color: AppTheme.slate400),
-                          prefixIcon: const Icon(Icons.keyboard, size: 18),
+                          hintStyle: const TextStyle(fontSize: 11, color: AppTheme.zinc400),
+                          prefixIcon: const Icon(Icons.keyboard, size: 18, color: AppTheme.zinc500),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppTheme.slate200),
+                            borderSide: const BorderSide(color: AppTheme.zinc200),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
@@ -385,7 +391,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                     ElevatedButton(
                       onPressed: gateState.isScanning ? null : () => _triggerScan(_qrController.text.trim()),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
+                        backgroundColor: AppTheme.zinc950,
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -405,7 +411,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
               Expanded(
                 flex: 3,
                 child: Container(
-                  color: AppTheme.slate50,
+                  color: AppTheme.bgLight,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -416,7 +422,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.slate500,
+                            color: AppTheme.zinc500,
                             letterSpacing: 0.8,
                           ),
                         ),
@@ -426,7 +432,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                             ? const Center(
                                 child: Text(
                                   'Belum ada tiket yang di-scan.',
-                                  style: TextStyle(fontSize: 12, color: AppTheme.slate400),
+                                  style: TextStyle(fontSize: 12, color: AppTheme.zinc400),
                                 ),
                               )
                             : ListView.separated(
@@ -448,13 +454,13 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: AppTheme.slate200),
+                                      border: Border.all(color: AppTheme.zinc200),
                                     ),
                                     child: Row(
                                       children: [
                                         Icon(
                                           isValid ? Icons.check_circle : Icons.cancel,
-                                          color: isValid ? AppTheme.emerald600 : AppTheme.red600,
+                                          color: isValid ? AppTheme.zinc950 : AppTheme.dangerColor,
                                           size: 20,
                                         ),
                                         const SizedBox(width: 10),
@@ -467,7 +473,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                                                 style: const TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
-                                                  color: AppTheme.slate900,
+                                                  color: AppTheme.zinc950,
                                                 ),
                                               ),
                                               if (sub.isNotEmpty)
@@ -475,7 +481,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                                                   sub,
                                                   style: const TextStyle(
                                                     fontSize: 10,
-                                                    color: AppTheme.slate500,
+                                                    color: AppTheme.zinc500,
                                                   ),
                                                 ),
                                             ],
@@ -489,13 +495,14 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                                               style: TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
-                                                color: isValid ? AppTheme.emerald600 : AppTheme.red600,
+                                                color: isValid ? AppTheme.zinc950 : AppTheme.dangerColor,
+                                                fontFamily: 'monospace',
                                               ),
                                             ),
                                             if (log['time'] is DateTime)
                                               Text(
                                                 TimeOfDay.fromDateTime(log['time']).format(context),
-                                                style: const TextStyle(fontSize: 9, color: AppTheme.slate400),
+                                                style: const TextStyle(fontSize: 9, color: AppTheme.zinc400, fontFamily: 'monospace'),
                                               ),
                                           ],
                                         ),
@@ -520,8 +527,8 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   color: gateState.flashSuccess
-                      ? const Color(0xEE059669)
-                      : const Color(0xEEDC2626),
+                      ? const Color(0xF009090B)
+                      : const Color(0xEE991B1B),
                   padding: const EdgeInsets.all(24),
                   child: Center(
                     child: SingleChildScrollView(
@@ -674,8 +681,8 @@ class _StatPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
-        Text(label, style: const TextStyle(fontSize: 9, color: AppTheme.slate500, fontWeight: FontWeight.bold)),
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color, fontFamily: 'monospace')),
+        Text(label, style: const TextStyle(fontSize: 9, color: AppTheme.zinc500, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -696,10 +703,10 @@ class _ScannerCornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppTheme.primaryColor
-      ..strokeWidth = 4
+      ..color = Colors.white
+      ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke;
-    const len = 30.0;
+    const len = 28.0;
 
     // Top-left
     canvas.drawLine(Offset.zero, const Offset(len, 0), paint);

@@ -22,7 +22,7 @@ class WhiteLabelApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'White Label — Ticketing & Cashless Mobile',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       routerConfig: router,
     );
   }

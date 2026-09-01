@@ -49,6 +49,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.bgLight,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -59,29 +60,31 @@ class _LoginViewState extends ConsumerState<LoginView> {
               // Logo Header
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                    color: AppTheme.zinc100,
                     shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.zinc200),
                   ),
-                  child: const Icon(Icons.qr_code_scanner_rounded, size: 48, color: AppTheme.primaryColor),
+                  child: const Icon(Icons.qr_code_scanner_rounded, size: 44, color: AppTheme.zinc950),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               const Text(
                 'WHITE LABEL',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  color: Colors.white,
+                  letterSpacing: 1.2,
+                  color: AppTheme.zinc950,
                 ),
               ),
+              const SizedBox(height: 4),
               const Text(
                 'Gate Access Staff & Organizer Control',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: AppTheme.slate400),
+                style: TextStyle(fontSize: 12, color: AppTheme.zinc500, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 24),
 
@@ -89,59 +92,59 @@ class _LoginViewState extends ConsumerState<LoginView> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  color: AppTheme.zinc100,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: AppTheme.zinc200),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline, size: 20, color: AppTheme.primaryColor),
+                    Icon(Icons.info_outline, size: 18, color: AppTheme.zinc700),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Aplikasi Mobile ini khusus untuk Gate Staff dan Organizer Event.',
-                        style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 12, color: AppTheme.zinc800, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Tenant & Server Settings Button
               InkWell(
                 onTap: () => context.push('/tenant-select'),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardDark,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.cardBorder),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.zinc200),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.settings_ethernet, size: 20, color: AppTheme.secondaryColor),
+                          const Icon(Icons.settings_ethernet, size: 20, color: AppTheme.zinc900),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Tenant: ${authState.tenantId}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.zinc950),
                               ),
                               const Text(
                                 'Atur IP Server Backend / Tenant',
-                                style: TextStyle(fontSize: 10, color: AppTheme.slate400),
+                                style: TextStyle(fontSize: 10, color: AppTheme.zinc500),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      const Icon(Icons.tune, size: 18, color: AppTheme.slate400),
+                      const Icon(Icons.tune, size: 18, color: AppTheme.zinc400),
                     ],
                   ),
                 ),
@@ -152,9 +155,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: AppTheme.zinc950, fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: const InputDecoration(
                   labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined, size: 20),
+                  prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppTheme.zinc500),
                 ),
               ),
               const SizedBox(height: 16),
@@ -163,11 +167,12 @@ class _LoginViewState extends ConsumerState<LoginView> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                style: const TextStyle(color: AppTheme.zinc950, fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppTheme.zinc500),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 20),
+                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 20, color: AppTheme.zinc500),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
@@ -177,13 +182,19 @@ class _LoginViewState extends ConsumerState<LoginView> {
               // Login Button
               ElevatedButton(
                 onPressed: authState.isLoading ? null : _handleLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.zinc950,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
                 child: authState.isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('MASUK KE AKUN'),
+                    : const Text('MASUK KE AKUN', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
               ),
 
               const SizedBox(height: 24),
@@ -191,7 +202,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
               const Text(
                 'Gate Staff didaftarkan oleh Organizer melalui Web Dashboard. Pendaftaran akun dapat diakses melalui Portal Web.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: AppTheme.slate400, height: 1.4),
+                style: TextStyle(fontSize: 11, color: AppTheme.zinc500, height: 1.4),
               ),
             ],
           ),
