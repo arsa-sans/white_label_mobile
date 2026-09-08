@@ -172,6 +172,31 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    await _storage.saveBaseUrl('');
+                    if (!mounted) return;
+                    setState(() {
+                      _serverUrlController.text = ApiEndpoints.baseUrl;
+                      _testConnectionStatus = null;
+                    });
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text('URL di-reset ke default: ${ApiEndpoints.baseUrl}'),
+                        backgroundColor: AppTheme.zinc900,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.restore, size: 16),
+                  label: const Text('Reset Default', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.zinc600,
+                    side: const BorderSide(color: AppTheme.zinc300),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
               ],
             ),
 
@@ -210,10 +235,10 @@ class _TenantSelectViewState extends ConsumerState<TenantSelectView> {
                 ActionChip(
                   backgroundColor: Colors.white,
                   side: const BorderSide(color: AppTheme.zinc200),
-                  label: const Text('WiFi Saat Ini (192.168.0.110)', style: TextStyle(fontSize: 11, color: AppTheme.zinc900, fontWeight: FontWeight.w600)),
+                  label: const Text('WiFi Saat Ini (192.168.110.53)', style: TextStyle(fontSize: 11, color: AppTheme.zinc900, fontWeight: FontWeight.w600)),
                   onPressed: () {
                     setState(() {
-                      _serverUrlController.text = 'http://192.168.0.110:4000/api/v1';
+                      _serverUrlController.text = 'http://192.168.110.53:4000/api/v1';
                     });
                   },
                 ),

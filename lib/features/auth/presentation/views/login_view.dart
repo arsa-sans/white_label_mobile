@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/storage/secure_storage.dart';
+import '../../../../core/constants/api_endpoints.dart';
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -15,12 +17,23 @@ class _LoginViewState extends ConsumerState<LoginView> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
   bool _obscurePassword = true;
+  String _activeServerUrl = ApiEndpoints.baseUrl;
 
   @override
   void initState() {
     super.initState();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    _loadActiveServerUrl();
+  }
+
+  void _loadActiveServerUrl() async {
+    final custom = await SecureStorageService().getBaseUrl();
+    if (mounted) {
+      setState(() {
+        _activeServerUrl = (custom != null && custom.trim().isNotEmpty) ? custom.trim() : ApiEndpoints.baseUrl;
+      });
+    }
   }
 
   @override
@@ -113,7 +126,10 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
               // Tenant & Server Settings Button
               InkWell(
-                onTap: () => context.push('/tenant-select'),
+                onTap: () async {
+                  await context.push('/tenant-select');
+                  _loadActiveServerUrl();
+                },
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -125,25 +141,32 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.settings_ethernet, size: 20, color: AppTheme.zinc900),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Tenant: ${authState.tenantId}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.zinc950),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(Icons.settings_ethernet, size: 20, color: AppTheme.zinc900),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tenant: ${authState.tenantId}',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.zinc950),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Server: $_activeServerUrl',
+                                    style: const TextStyle(fontSize: 10, color: AppTheme.zinc500, fontFamily: 'monospace'),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                              const Text(
-                                'Atur IP Server Backend / Tenant',
-                                style: TextStyle(fontSize: 10, color: AppTheme.zinc500),
-                              ),
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       const Icon(Icons.tune, size: 18, color: AppTheme.zinc400),
                     ],
                   ),

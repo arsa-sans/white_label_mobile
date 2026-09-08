@@ -106,14 +106,15 @@ class AuthViewModel extends Notifier<AuthState> {
         return false;
       }
     } on DioException catch (e) {
-      final msg =
-          (e.response?.data as Map<String, dynamic>?)?['error']?.toString() ??
-              'Gagal melakukan login. Periksa koneksi backend.';
+      final serverMsg = (e.response?.data as Map<String, dynamic>?)?['error']?.toString();
+      final targetUri = e.requestOptions.uri.toString();
+      final msg = serverMsg ??
+          'Gagal terhubung ke server ($targetUri).\nJenis error: ${e.type.name}. Periksa IP WiFi laptop.';
       state = state.copyWith(isLoading: false, error: msg);
       return false;
-    } catch (_) {
+    } catch (e) {
       state = state.copyWith(
-          isLoading: false, error: 'Gagal melakukan login.');
+          isLoading: false, error: 'Gagal melakukan login: $e');
       return false;
     }
   }
