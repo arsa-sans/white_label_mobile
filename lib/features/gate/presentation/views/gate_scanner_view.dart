@@ -141,14 +141,25 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
 
     if (mounted) {
       _flashAnimController.forward(from: 0).then((_) {
+        // Auto-dismiss flash overlay after 2.5 seconds
         Future.delayed(const Duration(milliseconds: 2500), () {
-          if (mounted && ref.read(gateProvider).showFlash) {
-            ref.read(gateProvider.notifier).hideFlash();
-            _isProcessingLiveScan = false;
-          }
+          _dismissFlashAndResumeScanning();
         });
       });
     }
+  }
+
+  /// Dismiss flash overlay and re-enable the scanner for the next scan
+  void _dismissFlashAndResumeScanning() {
+    if (!mounted) return;
+    if (ref.read(gateProvider).showFlash) {
+      ref.read(gateProvider.notifier).hideFlash();
+    }
+    // Always reset the processing flag so the scanner can detect new QR codes
+    _isProcessingLiveScan = false;
+    // Reset last scanned token so a different QR code can be scanned immediately
+    _lastScannedToken = null;
+    _lastScannedTime = null;
   }
 
   void _onBarcodeDetected(BarcodeCapture capture) {
@@ -523,7 +534,7 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
           if (gateState.showFlash)
             Positioned.fill(
               child: GestureDetector(
-                onTap: () => ref.read(gateProvider.notifier).hideFlash(),
+                onTap: () => _dismissFlashAndResumeScanning(),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   color: gateState.flashSuccess
