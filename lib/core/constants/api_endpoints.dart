@@ -30,9 +30,9 @@
 class ApiEndpoints {
   // ┌──────────────────────────────────────────────────────────────────────────┐
   // │  Base Backend URL — UPDATE IP INI sesuai IPv4 WiFi laptop kamu!        │
-  // │  Laptop IPv4 saat ini: 10.240.130.123                                   │
+  // │  Laptop IPv4 saat ini: 10.64.190.123                                    │
   // └──────────────────────────────────────────────────────────────────────────┘
-  static const String baseUrl = 'http://10.240.130.123:4000/api/v1';
+  static const String baseUrl = 'http://10.64.190.123:4000/api/v1';
   static const String devLocalhostUrl = 'http://localhost:4000/api/v1';
 
   // Auth
