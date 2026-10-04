@@ -5,8 +5,6 @@ class BoothRepository {
   final ApiClient _apiClient;
 
   BoothRepository({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
-
-  /// Proses transaksi debit wristband NFC melalui backend
   Future<Map<String, dynamic>> debitBooth({
     required int amount,
     required String nfcUid,
