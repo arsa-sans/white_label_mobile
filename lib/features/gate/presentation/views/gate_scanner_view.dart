@@ -86,7 +86,6 @@ class _GateScannerViewState extends ConsumerState<GateScannerView>
       ref.read(gateProvider.notifier).setOnline(isOnline);
     });
 
-    // Listen for remote scan notifications (from other devices via Socket.IO)
     ref.listenManual(
       gateProvider.select((s) => s.remoteNotification),
       (previous, next) {
